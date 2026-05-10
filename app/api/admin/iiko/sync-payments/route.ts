@@ -4,6 +4,9 @@ import { getPaymentTypes } from "@/lib/iiko/client";
 import { syncPaymentTypes } from "@/lib/iiko/menu";
 import { prisma } from "@/lib/prisma";
 
+export const dynamic = "force-dynamic";
+
+
 export async function POST() {
   const session = await getSession();
   if (!session || session.role !== "ADMIN") {

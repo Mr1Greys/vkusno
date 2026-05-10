@@ -1,5 +1,8 @@
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
+
+/** На этапе `next build` на Vercel нет доступа к БД — не предрендерим админку. */
+export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { LayoutDashboard, ShoppingBag, Users, Settings, Package } from "lucide-react";
 

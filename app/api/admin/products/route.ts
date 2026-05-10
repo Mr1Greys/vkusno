@@ -3,6 +3,9 @@ import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { mergeProductImageUrl } from "@/lib/bakery-product-images";
 
+export const dynamic = "force-dynamic";
+
+
 export async function GET() {
   const session = await getSession();
   if (!session || session.role !== "ADMIN") {

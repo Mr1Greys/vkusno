@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { iikoStatusToOrderStatus } from "@/lib/iiko/orders";
 
+export const dynamic = "force-dynamic";
+
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();

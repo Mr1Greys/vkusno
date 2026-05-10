@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { settingsRowsToMap } from "@/lib/shop-settings";
 
+export const dynamic = "force-dynamic";
+
+
 const PUBLIC_KEYS = [
   "delivery_price",
   "delivery_free_from",

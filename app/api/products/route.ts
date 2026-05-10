@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { mergeProductImageUrl } from "@/lib/bakery-product-images";
 
+export const dynamic = "force-dynamic";
+
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const category = searchParams.get("category");

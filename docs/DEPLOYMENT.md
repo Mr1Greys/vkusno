@@ -38,7 +38,7 @@ git push -u origin main
 
    | Переменная | Описание |
    |------------|----------|
-   | `DATABASE_URL` | Строка PostgreSQL (Vercel Postgres, Neon, Supabase и т.д.) |
+   | `DATABASE_URL` | Строка PostgreSQL (Vercel Postgres, Neon, Supabase и т.д.). Нужна **в проде для работы сайта**; сборка проходит без неё только потому что Prisma вызывается в динамических маршрутах. |
    | `JWT_SECRET` | Случайная строка ≥ 32 символов |
    | `NEXT_PUBLIC_APP_URL` | Публичный URL сайта, например `https://ваш-проект.vercel.app` |
    | `ADMIN_INIT_KEY` | Секрет для первичной настройки админки (если используется) |

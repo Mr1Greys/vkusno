@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { checkIikoConnection } from "@/lib/iiko/client";
 
+export const dynamic = "force-dynamic";
+
+
 export async function GET() {
   const session = await getSession();
   if (!session || session.role !== "ADMIN") {

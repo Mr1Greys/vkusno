@@ -3,6 +3,9 @@ import { prisma } from "@/lib/prisma";
 import { createToken } from "@/lib/auth";
 import bcrypt from "bcryptjs";
 
+export const dynamic = "force-dynamic";
+
+
 const DEFAULT_ADMIN_PHONE = process.env.ADMIN_PHONE || "+79990000000";
 const DEFAULT_ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin123";
 

@@ -10,6 +10,8 @@ import {
   settingsRowsToMap,
 } from "@/lib/shop-settings";
 
+export const dynamic = "force-dynamic";
+
 type LineInput = { productId: string; quantity: number; price: number };
 
 export async function POST(request: Request) {

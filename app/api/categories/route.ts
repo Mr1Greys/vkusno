@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { mergeProductImageUrl } from "@/lib/bakery-product-images";
 
+export const dynamic = "force-dynamic";
+
+
 const categories = [
   {
     id: "1",
