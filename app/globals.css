@@ -27,7 +27,8 @@
     /* высота горизонтальной карусели категорий (орбы + подпись) */
     --shop-category-nav-height: 6.75rem;
     /* место под фиксированный таб-бар на мобилке (контент + safe area) */
-    --mobile-tab-bar-height: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+    /* плавающий таб-бар: орб-док + safe area + отступ снизу */
+    --mobile-tab-bar-height: calc(7rem + env(safe-area-inset-bottom, 0px));
   }
 
   @media (min-width: 768px) {

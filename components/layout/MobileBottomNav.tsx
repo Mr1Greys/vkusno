@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import type { LucideIcon } from "lucide-react";
 import { Heart, Home, ShoppingCart, User } from "lucide-react";
 import { useCartStore } from "@/store/cartStore";
+import { cn } from "@/lib/utils";
 
 const HIDE_PATHS = new Set(["/checkout"]);
 
@@ -27,6 +28,9 @@ const NAV: {
   { href: "/profile", label: "Профиль", Icon: User },
 ];
 
+const ICON_INACTIVE_W = 1.6;
+const ICON_ACTIVE_W = 1.95;
+
 export function MobileBottomNav() {
   const pathname = normalizePath(usePathname() || "");
   const [mounted, setMounted] = useState(false);
@@ -38,42 +42,71 @@ export function MobileBottomNav() {
 
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-surface-1 shadow-[0_-4px_24px_-8px_rgba(74,60,47,0.12)] md:hidden"
-      style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom, 0px))" }}
       aria-label="Основная навигация"
+      className="pointer-events-none fixed inset-x-0 bottom-0 z-50 md:hidden"
     >
-      <div className="mx-auto flex max-w-lg items-stretch justify-around gap-1 px-2 pt-2">
-        {NAV.map(({ href, label, Icon, showCartBadge }) => {
-          const active =
-            href === "/"
-              ? pathname === "/"
-              : pathname === href || pathname.startsWith(`${href}/`);
-          return (
-            <Link
-              key={href}
-              href={href}
-              className={`flex min-w-0 flex-1 flex-col items-center gap-1 rounded-xl py-1 ${
-                active ? "text-brand" : "text-text-2"
-              }`}
-            >
-              <span className="relative flex h-9 w-9 items-center justify-center">
-                <Icon className="h-6 w-6" strokeWidth={active ? 2.25 : 1.75} />
-                {showCartBadge && mounted && cartCount > 0 ? (
-                  <span className="absolute -right-1 -top-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-accent px-[5px] text-[10px] font-bold text-brand ring-2 ring-surface-1">
-                    {cartCount > 99 ? "99+" : cartCount}
+      <div className="pointer-events-auto pb-[max(0.625rem,env(safe-area-inset-bottom,0px))] pt-2">
+        <div
+          className={cn(
+            "mx-3 rounded-[22px]",
+            "border border-brand/[0.07]",
+            "bg-[#FFFDFB]/88 backdrop-blur-2xl backdrop-saturate-150",
+            "shadow-[0_-20px_50px_-28px_rgba(74,60,47,0.22),0_14px_32px_-24px_rgba(74,60,47,0.12)]",
+            "ring-1 ring-white/70"
+          )}
+        >
+          <div className="flex items-stretch justify-between gap-0 px-2 py-2 sm:px-3">
+            {NAV.map(({ href, label, Icon, showCartBadge }) => {
+              const active =
+                href === "/"
+                  ? pathname === "/"
+                  : pathname === href || pathname.startsWith(`${href}/`);
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  className={cn(
+                    "flex min-w-0 flex-1 flex-col items-center gap-1 rounded-[17px] py-2 transition-[color,transform,background,box-shadow] duration-300 ease-out [-webkit-tap-highlight-color:transparent]",
+                    active
+                      ? cn(
+                          "bg-brand/[0.07] text-brand",
+                          "shadow-[inset_0_1px_0_rgba(255,255,255,0.65),inset_0_-1px_0_rgba(74,60,47,0.06)]"
+                        )
+                      : cn(
+                          "text-text-2",
+                          "active:scale-[0.97]",
+                          "hover:bg-black/[0.03] hover:text-brand"
+                        )
+                  )}
+                >
+                  <span className="relative flex h-[22px] w-[22px] items-center justify-center">
+                    <Icon
+                      className="h-[22px] w-[22px]"
+                      strokeWidth={active ? ICON_ACTIVE_W : ICON_INACTIVE_W}
+                      aria-hidden
+                    />
+                    {showCartBadge && mounted && cartCount > 0 ? (
+                      <span
+                        className="absolute -right-1.5 -top-1 flex min-h-[16px] min-w-[16px] items-center justify-center rounded-full bg-accent px-1 py-0.5 text-[9px] font-bold tabular-nums text-brand shadow-sm ring-[2.5px] ring-[#FFFDFB]"
+                        aria-live="polite"
+                      >
+                        {cartCount > 99 ? "99+" : cartCount}
+                      </span>
+                    ) : null}
                   </span>
-                ) : null}
-              </span>
-              <span
-                className={`truncate text-[11px] leading-none ${
-                  active ? "font-semibold" : "font-medium"
-                }`}
-              >
-                {label}
-              </span>
-            </Link>
-          );
-        })}
+                  <span
+                    className={cn(
+                      "max-w-[4.75rem] truncate text-center text-[11px] leading-none tracking-tight md:max-w-[5rem]",
+                      active ? "font-semibold" : "font-medium"
+                    )}
+                  >
+                    {label}
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
       </div>
     </nav>
   );
