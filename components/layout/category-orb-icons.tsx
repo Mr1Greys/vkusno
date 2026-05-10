@@ -21,7 +21,8 @@ import {
  * - никаких кастомных «кривых» SVG
  */
 
-const STROKE = 2.25;
+/** Было 2.25 — слишком жирно в круглых орбах; чуть тоньше классических 2px Lucide. */
+const STROKE = 1.75;
 
 export const CATEGORY_ORB_SVG_CLASS =
   "h-8 w-8 shrink-0 md:h-8 md:w-8";
