@@ -9,6 +9,7 @@ import { BrandLogo } from "@/components/layout/BrandLogo";
 /**
  * Переключатель показываем только там, где он реально нужен.
  * На меню и оформлении — уже в нужном месте; в профиле не показываем.
+ * Избранное ведёт с нижней навигации только на мобилке — там вторую строку с переключателем не показываем.
  */
 const HIDE_HEADER_DELIVERY_PATHS = new Set([
   "/cart",
@@ -18,6 +19,9 @@ const HIDE_HEADER_DELIVERY_PATHS = new Set([
   "/profile",
 ]);
 
+/** Только мобильная шапка: на этих путях без переключателя «Самовывоз / Доставка». */
+const HIDE_MOBILE_HEADER_DELIVERY_PATHS = new Set(["/favorites"]);
+
 function stripTrailingSlash(path: string) {
   if (path.length > 1 && path.endsWith("/")) return path.slice(0, -1);
   return path;
@@ -25,9 +29,12 @@ function stripTrailingSlash(path: string) {
 
 export function Header() {
   const pathname = usePathname() || "";
-  const showHeaderDeliveryToggle = !HIDE_HEADER_DELIVERY_PATHS.has(
-    stripTrailingSlash(pathname)
-  );
+  const path = stripTrailingSlash(pathname);
+  const showHeaderDeliveryToggle =
+    !HIDE_HEADER_DELIVERY_PATHS.has(path);
+  const showMobileDeliveryToggle =
+    showHeaderDeliveryToggle &&
+    !HIDE_MOBILE_HEADER_DELIVERY_PATHS.has(path);
 
   const headerRef = useRef<HTMLElement | null>(null);
   const [scrolled, setScrolled] = useState(false);
@@ -54,7 +61,7 @@ export function Header() {
     ro.observe(el);
 
     return () => ro.disconnect();
-  }, [showHeaderDeliveryToggle]);
+  }, [showHeaderDeliveryToggle, showMobileDeliveryToggle]);
 
   return (
     <header
@@ -67,7 +74,7 @@ export function Header() {
       {/* Мобильная: вторая строка — только если переключатель не скрыт (корзина / чекаут) */}
       <div
         className={`mx-auto grid max-w-7xl grid-cols-[1fr_auto] items-center gap-x-3 px-3 py-2.5 md:hidden ${
-          showHeaderDeliveryToggle ? "gap-y-2" : ""
+          showMobileDeliveryToggle ? "gap-y-2" : ""
         }`}
       >
         <div className="flex items-center justify-self-start">
@@ -76,7 +83,7 @@ export function Header() {
         <div className="flex items-center justify-self-end">
           <HeaderActions />
         </div>
-        {showHeaderDeliveryToggle && (
+        {showMobileDeliveryToggle && (
           <div className="col-span-2 flex w-full min-w-0 justify-center justify-self-center px-0">
             <div className="w-full max-w-md">
               <HeaderDeliveryToggle />
