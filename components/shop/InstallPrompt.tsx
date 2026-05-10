@@ -48,7 +48,7 @@ export function InstallPrompt() {
     >
       <div
         role="banner"
-        className="relative flex items-center gap-3.5 rounded-[22px] border border-brand/[0.09] bg-[#FFFDFB]/93 px-4 py-3 shadow-[0_14px_40px_-20px_rgba(74,60,47,0.28),0_1px_0_rgba(255,255,255,0.9)_inset] backdrop-blur-xl backdrop-saturate-150"
+        className="relative flex items-center gap-3.5 rounded-[22px] border border-brand/15 bg-cream px-4 py-3 shadow-[0_12px_36px_-16px_rgba(74,60,47,0.32)]"
       >
         <BrandLogo variant="prompt" asStatic className="ring-1 ring-brand/[0.06]" />
         <div className="min-w-0 flex-1">

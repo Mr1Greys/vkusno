@@ -49,10 +49,10 @@ export function MobileBottomNav() {
         <div
           className={cn(
             "mx-3 rounded-[22px]",
-            "border border-brand/[0.07]",
-            "bg-[#FFFDFB]/88 backdrop-blur-2xl backdrop-saturate-150",
-            "shadow-[0_-20px_50px_-28px_rgba(74,60,47,0.22),0_14px_32px_-24px_rgba(74,60,47,0.12)]",
-            "ring-1 ring-white/70"
+            "border border-brand/[0.12]",
+            /* почти сплошной фон — текст/иконки не теряются на тёмных фото под скроллом */
+            "bg-cream/[0.98] backdrop-blur-sm",
+            "shadow-[0_8px_28px_-10px_rgba(74,60,47,0.28),inset_0_1px_0_rgba(255,255,255,0.85)]"
           )}
         >
           <div className="flex items-stretch justify-between gap-0 px-2 py-2 sm:px-3">
@@ -69,25 +69,26 @@ export function MobileBottomNav() {
                     "flex min-w-0 flex-1 flex-col items-center gap-1 rounded-[17px] py-2 transition-[color,transform,background,box-shadow] duration-300 ease-out [-webkit-tap-highlight-color:transparent]",
                     active
                       ? cn(
-                          "bg-brand/[0.07] text-brand",
-                          "shadow-[inset_0_1px_0_rgba(255,255,255,0.65),inset_0_-1px_0_rgba(74,60,47,0.06)]"
+                          "bg-white/90 text-brand",
+                          "shadow-[inset_0_1px_0_rgba(255,255,255,0.9),inset_0_-1px_0_rgba(74,60,47,0.08)] ring-1 ring-brand/10"
                         )
                       : cn(
-                          "text-text-2",
+                          "text-brand/90",
+                          "[&_svg]:drop-shadow-[0_0.5px_0_rgba(250,248,245,0.95)]",
                           "active:scale-[0.97]",
-                          "hover:bg-black/[0.03] hover:text-brand"
+                          "hover:bg-black/[0.04] hover:text-brand"
                         )
                   )}
                 >
                   <span className="relative flex h-[22px] w-[22px] items-center justify-center">
                     <Icon
-                      className="h-[22px] w-[22px]"
-                      strokeWidth={active ? ICON_ACTIVE_W : ICON_INACTIVE_W}
+                      className="h-[22px] w-[22px] text-current"
+                      strokeWidth={active ? ICON_ACTIVE_W : ICON_INACTIVE_W + 0.1}
                       aria-hidden
                     />
                     {showCartBadge && mounted && cartCount > 0 ? (
                       <span
-                        className="absolute -right-1.5 -top-1 flex min-h-[16px] min-w-[16px] items-center justify-center rounded-full bg-accent px-1 py-0.5 text-[9px] font-bold tabular-nums text-brand shadow-sm ring-[2.5px] ring-[#FFFDFB]"
+                        className="absolute -right-1.5 -top-1 flex min-h-[16px] min-w-[16px] items-center justify-center rounded-full bg-accent px-1 py-0.5 text-[9px] font-bold tabular-nums text-brand shadow-sm ring-[2.5px] ring-cream"
                         aria-live="polite"
                       >
                         {cartCount > 99 ? "99+" : cartCount}
@@ -96,7 +97,7 @@ export function MobileBottomNav() {
                   </span>
                   <span
                     className={cn(
-                      "max-w-[4.75rem] truncate text-center text-[11px] leading-none tracking-tight md:max-w-[5rem]",
+                      "max-w-[4.75rem] truncate text-center text-[12px] leading-tight tracking-tight [text-shadow:0_0.5px_0_rgba(250,248,245,0.9)] md:max-w-[5rem]",
                       active ? "font-semibold" : "font-medium"
                     )}
                   >

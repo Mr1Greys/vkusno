@@ -68,7 +68,7 @@ export function ProductCard({ product, onClick }: ProductCardProps) {
       <div className="flex min-h-0 flex-1 flex-col p-3 sm:p-4 md:p-5">
         <div className="min-h-0 flex-1 space-y-2 sm:space-y-3">
           <div>
-            <h3 className="line-clamp-2 text-[13px] font-semibold leading-snug text-text sm:text-base sm:leading-tight md:text-lg md:leading-7">
+            <h3 className="line-clamp-2 text-[15px] font-semibold leading-snug text-text sm:text-[18px] sm:leading-tight md:text-[20px] md:leading-7">
               {product.name}
             </h3>
             {product.description ? (
