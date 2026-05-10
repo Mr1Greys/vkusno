@@ -1,0 +1,120 @@
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --c-brand: #4A3C2F;
+    --c-brand-hover: #3A2F25;
+    --c-coffee: #8B6F47;
+    --c-beige: #D4C5B0;
+    --c-cream: #FAF8F5;
+    --c-accent: #F5A623;
+    --c-bg: #FAF8F5;
+    --c-surface-1: #FFFFFF;
+    --c-surface-2: #F5F0E8;
+    --c-border: #D4C5B0;
+    --c-text: #4A3C2F;
+    --c-text-2: #8B6F47;
+    --c-text-3: #A8927A;
+    --c-success: #22c55e;
+    --c-error: #ef4444;
+    --c-halal: #2D9E5F;
+    /* двухрядная шапка на мобилке: лого + действия, затем переключатель доставки */
+    --shop-header-height: 8.75rem;
+    /* высота горизонтальной карусели категорий (орбы + подпись) */
+    --shop-category-nav-height: 6.75rem;
+    /* место под фиксированный таб-бар на мобилке (контент + safe area) */
+    --mobile-tab-bar-height: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  @media (min-width: 768px) {
+    :root {
+      --shop-header-height: 6.75rem;
+      --shop-category-nav-height: 7rem;
+      --mobile-tab-bar-height: 0px;
+    }
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    font-family: "DM Sans", system-ui, sans-serif;
+    background: var(--c-bg);
+    color: var(--c-text);
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+@layer utilities {
+  .font-display {
+    font-family: "DM Sans", system-ui, sans-serif;
+    letter-spacing: -0.035em;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+.animate-fadeInUp {
+  animation: fadeInUp 0.5s ease-out forwards;
+}
+
+.stagger-1 {
+  animation-delay: 0.05s;
+}
+.stagger-2 {
+  animation-delay: 0.1s;
+}
+.stagger-3 {
+  animation-delay: 0.15s;
+}
+.stagger-4 {
+  animation-delay: 0.2s;
+}
+.stagger-5 {
+  animation-delay: 0.25s;
+}
+.stagger-6 {
+  animation-delay: 0.3s;
+}

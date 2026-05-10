@@ -1,0 +1,135 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  phone        String   @unique
+  name         String?
+  email        String?
+  passwordHash String?
+  role         Role     @default(CUSTOMER)
+  bonusPoints  Int      @default(0)
+  orders       Order[]
+  bonusHistory BonusHistory[]
+  createdAt    DateTime @default(now())
+}
+
+enum Role {
+  CUSTOMER
+  ADMIN
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique
+  sortOrder   Int       @default(0)
+  isActive    Boolean   @default(true)
+  products    Product[]
+}
+
+model Product {
+  id            String    @id @default(cuid())
+  name          String
+  description   String?
+  price         Int
+  weight        String?
+  imageUrl      String?
+  isAvailable   Boolean   @default(true)
+  isHalal       Boolean   @default(false)
+  sortOrder     Int       @default(0)
+  categoryId    String
+  category      Category  @relation(fields: [categoryId], references: [id])
+  orderItems    OrderItem[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  iikoProductId String?
+  iikoGroupId   String?
+}
+
+model Order {
+  id              String        @id @default(cuid())
+  orderNumber     String        @unique
+  userId          String?
+  user            User?         @relation(fields: [userId], references: [id])
+  guestPhone      String?
+  guestName       String?
+  deliveryType    DeliveryType
+  address         String?
+  status          OrderStatus   @default(PENDING)
+  totalAmount     Int
+  bonusUsed       Int           @default(0)
+  bonusEarned     Int           @default(0)
+  comment         String?
+  paymentMethod   String?
+  paymentTypeId   String?
+  paymentTypeName String?
+  items           OrderItem[]
+  iikoOrderId     String?
+  iikoOrderStatus String?
+  iikoPushedAt    DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
+enum DeliveryType {
+  DELIVERY
+  PICKUP
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PREPARING
+  READY
+  DELIVERING
+  COMPLETED
+  CANCELLED
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  quantity  Int
+  price     Int
+}
+
+model BonusHistory {
+  id          String     @id @default(cuid())
+  userId      String
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type        BonusType
+  amount      Int
+  description String?
+  orderId     String?
+  createdAt   DateTime   @default(now())
+}
+
+enum BonusType {
+  EARNED
+  SPENT
+  MANUAL
+  REFERRAL
+}
+
+model Settings {
+  key   String @id
+  value String
+}
+
+model IikoPaymentType {
+  id        String   @id
+  name      String
+  kind      String
+  isActive  Boolean  @default(true)
+  updatedAt DateTime @updatedAt
+}
