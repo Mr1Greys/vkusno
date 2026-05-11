@@ -28,8 +28,9 @@ const NAV: {
   { href: "/profile", label: "Профиль", Icon: User },
 ];
 
-const ICON_INACTIVE_W = 1.6;
-const ICON_ACTIVE_W = 1.95;
+/** Тонкие линии как в минималистичном таб-баре */
+const ICON_INACTIVE_W = 1.35;
+const ICON_ACTIVE_W = 1.9;
 
 export function MobileBottomNav() {
   const pathname = normalizePath(usePathname() || "");
@@ -43,70 +44,60 @@ export function MobileBottomNav() {
   return (
     <nav
       aria-label="Основная навигация"
-      className="pointer-events-none fixed inset-x-0 bottom-0 z-50 md:hidden"
+      className="pointer-events-none fixed inset-x-0 bottom-0 z-50 outline-none md:hidden"
     >
-      <div className="pointer-events-auto pb-[max(0.625rem,env(safe-area-inset-bottom,0px))] pt-2">
-        <div
-          className={cn(
-            "mx-3 rounded-[22px]",
-            "border border-brand/[0.12]",
-            /* почти сплошной фон — текст/иконки не теряются на тёмных фото под скроллом */
-            "bg-cream/[0.98] backdrop-blur-sm",
-            "shadow-[0_8px_28px_-10px_rgba(74,60,47,0.28),inset_0_1px_0_rgba(255,255,255,0.85)]"
-          )}
-        >
-          <div className="flex items-stretch justify-between gap-0 px-2 py-2 sm:px-3">
-            {NAV.map(({ href, label, Icon, showCartBadge }) => {
-              const active =
-                href === "/"
-                  ? pathname === "/"
-                  : pathname === href || pathname.startsWith(`${href}/`);
-              return (
-                <Link
-                  key={href}
-                  href={href}
+      <div
+        className={cn(
+          "pointer-events-auto border-t border-beige/50 bg-white",
+          "pb-[max(0.5rem,env(safe-area-inset-bottom,0px))] pt-2.5",
+          "shadow-[0_-6px_28px_-14px_rgba(74,60,47,0.12)]"
+        )}
+      >
+        <div className="mx-auto flex max-w-lg items-stretch justify-between gap-1 px-3 sm:px-5">
+          {NAV.map(({ href, label, Icon, showCartBadge }) => {
+            const active =
+              href === "/"
+                ? pathname === "/"
+                : pathname === href || pathname.startsWith(`${href}/`);
+            return (
+              <Link
+                key={href}
+                href={href}
+                className={cn(
+                  "flex min-h-[52px] min-w-0 flex-1 flex-col items-center justify-center gap-1.5 rounded-xl px-1 py-1 text-current outline-none [-webkit-tap-highlight-color:transparent]",
+                  "transition-colors duration-150 ease-out",
+                  "focus-visible:ring-2 focus-visible:ring-brand/20 focus-visible:ring-offset-2 focus-visible:ring-offset-white",
+                  active
+                    ? "text-brand"
+                    : "text-text-3 active:text-text-2 sm:hover:text-text-2"
+                )}
+              >
+                <span className="relative flex h-[22px] w-[22px] shrink-0 items-center justify-center sm:h-6 sm:w-6">
+                  <Icon
+                    className="h-[22px] w-[22px] text-current sm:h-6 sm:w-6"
+                    strokeWidth={active ? ICON_ACTIVE_W : ICON_INACTIVE_W}
+                    aria-hidden
+                  />
+                  {showCartBadge && mounted && cartCount > 0 ? (
+                    <span
+                      className="absolute -right-2 -top-1.5 flex min-h-[15px] min-w-[15px] items-center justify-center rounded-full bg-accent px-1 py-0.5 text-[8px] font-bold tabular-nums text-brand shadow-sm ring-[2px] ring-white"
+                      aria-live="polite"
+                    >
+                      {cartCount > 99 ? "99+" : cartCount}
+                    </span>
+                  ) : null}
+                </span>
+                <span
                   className={cn(
-                    "flex min-w-0 flex-1 flex-col items-center gap-1 rounded-[17px] py-2 transition-[color,transform,background,box-shadow] duration-300 ease-out [-webkit-tap-highlight-color:transparent]",
-                    active
-                      ? cn(
-                          "bg-white/90 text-brand",
-                          "shadow-[inset_0_1px_0_rgba(255,255,255,0.9),inset_0_-1px_0_rgba(74,60,47,0.08)] ring-1 ring-brand/10"
-                        )
-                      : cn(
-                          "text-brand/90",
-                          "[&_svg]:drop-shadow-[0_0.5px_0_rgba(250,248,245,0.95)]",
-                          "active:scale-[0.97]",
-                          "hover:bg-black/[0.04] hover:text-brand"
-                        )
+                    "max-w-[4.75rem] truncate text-center text-[11px] leading-tight tracking-tight sm:max-w-[5.25rem] sm:text-xs",
+                    active ? "font-semibold" : "font-medium"
                   )}
                 >
-                  <span className="relative flex h-[22px] w-[22px] items-center justify-center">
-                    <Icon
-                      className="h-[22px] w-[22px] text-current"
-                      strokeWidth={active ? ICON_ACTIVE_W : ICON_INACTIVE_W + 0.1}
-                      aria-hidden
-                    />
-                    {showCartBadge && mounted && cartCount > 0 ? (
-                      <span
-                        className="absolute -right-1.5 -top-1 flex min-h-[16px] min-w-[16px] items-center justify-center rounded-full bg-accent px-1 py-0.5 text-[9px] font-bold tabular-nums text-brand shadow-sm ring-[2.5px] ring-cream"
-                        aria-live="polite"
-                      >
-                        {cartCount > 99 ? "99+" : cartCount}
-                      </span>
-                    ) : null}
-                  </span>
-                  <span
-                    className={cn(
-                      "max-w-[4.75rem] truncate text-center text-[12px] leading-tight tracking-tight [text-shadow:0_0.5px_0_rgba(250,248,245,0.9)] md:max-w-[5rem]",
-                      active ? "font-semibold" : "font-medium"
-                    )}
-                  >
-                    {label}
-                  </span>
-                </Link>
-              );
-            })}
-          </div>
+                  {label}
+                </span>
+              </Link>
+            );
+          })}
         </div>
       </div>
     </nav>
