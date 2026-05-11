@@ -13,68 +13,127 @@ import {
   Wheat,
   Sandwich,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 /**
- * Стандартные line-иконки (единый набор), как на референсе:
- * - один stroke
- * - круглые окончания/соединения
- * - никаких кастомных «кривых» SVG
+ * Line-иконки категорий: тонкий stroke для пилюль, чуть плотнее для круглых орбов (если понадобится).
  */
 
-/** Было 2.25 — слишком жирно в круглых орбах; чуть тоньше классических 2px Lucide. */
-const STROKE = 1.75;
+const STROKE_ORB = 1.45;
+const STROKE_PILL = 1.15;
 
 export const CATEGORY_ORB_SVG_CLASS =
   "h-8 w-8 shrink-0 md:h-8 md:w-8";
 
-function FallbackIcon() {
+export const CATEGORY_PILL_ICON_CLASS = "h-[1.15rem] w-[1.15rem] shrink-0 sm:h-5 sm:w-5";
+
+export type CategoryIconProps = {
+  className?: string;
+  strokeWidth?: number;
+};
+
+function FallbackIcon({ className, strokeWidth }: CategoryIconProps) {
   return (
     <Wheat
-      className={CATEGORY_ORB_SVG_CLASS}
+      className={cn(CATEGORY_ORB_SVG_CLASS, className)}
       stroke="currentColor"
-      strokeWidth={STROKE}
+      strokeWidth={strokeWidth ?? STROKE_ORB}
       aria-hidden
     />
   );
 }
 
-function BlinyIcon() {
-  return <Disc3 className={CATEGORY_ORB_SVG_CLASS} strokeWidth={STROKE} aria-hidden />;
+function BlinyIcon({ className, strokeWidth }: CategoryIconProps) {
+  return (
+    <Disc3
+      className={cn(CATEGORY_ORB_SVG_CLASS, className)}
+      strokeWidth={strokeWidth ?? STROKE_ORB}
+      aria-hidden
+    />
+  );
 }
 
-function DessertsIcon() {
-  return <CakeSlice className={CATEGORY_ORB_SVG_CLASS} strokeWidth={STROKE} aria-hidden />;
+function DessertsIcon({ className, strokeWidth }: CategoryIconProps) {
+  return (
+    <CakeSlice
+      className={cn(CATEGORY_ORB_SVG_CLASS, className)}
+      strokeWidth={strokeWidth ?? STROKE_ORB}
+      aria-hidden
+    />
+  );
 }
 
-function SavoryPastryIcon() {
-  return <Sandwich className={CATEGORY_ORB_SVG_CLASS} strokeWidth={STROKE} aria-hidden />;
+function SavoryPastryIcon({ className, strokeWidth }: CategoryIconProps) {
+  return (
+    <Sandwich
+      className={cn(CATEGORY_ORB_SVG_CLASS, className)}
+      strokeWidth={strokeWidth ?? STROKE_ORB}
+      aria-hidden
+    />
+  );
 }
 
-function SweetPastryIcon() {
-  return <Croissant className={CATEGORY_ORB_SVG_CLASS} strokeWidth={STROKE} aria-hidden />;
+function SweetPastryIcon({ className, strokeWidth }: CategoryIconProps) {
+  return (
+    <Croissant
+      className={cn(CATEGORY_ORB_SVG_CLASS, className)}
+      strokeWidth={strokeWidth ?? STROKE_ORB}
+      aria-hidden
+    />
+  );
 }
 
-function MangalIcon() {
-  return <Beef className={CATEGORY_ORB_SVG_CLASS} strokeWidth={STROKE} aria-hidden />;
+function MangalIcon({ className, strokeWidth }: CategoryIconProps) {
+  return (
+    <Beef
+      className={cn(CATEGORY_ORB_SVG_CLASS, className)}
+      strokeWidth={strokeWidth ?? STROKE_ORB}
+      aria-hidden
+    />
+  );
 }
 
-function SaladsIcon() {
-  return <Salad className={CATEGORY_ORB_SVG_CLASS} strokeWidth={STROKE} aria-hidden />;
+function SaladsIcon({ className, strokeWidth }: CategoryIconProps) {
+  return (
+    <Salad
+      className={cn(CATEGORY_ORB_SVG_CLASS, className)}
+      strokeWidth={strokeWidth ?? STROKE_ORB}
+      aria-hidden
+    />
+  );
 }
 
-function SnacksIcon() {
-  return <Pizza className={CATEGORY_ORB_SVG_CLASS} strokeWidth={STROKE} aria-hidden />;
+function SnacksIcon({ className, strokeWidth }: CategoryIconProps) {
+  return (
+    <Pizza
+      className={cn(CATEGORY_ORB_SVG_CLASS, className)}
+      strokeWidth={strokeWidth ?? STROKE_ORB}
+      aria-hidden
+    />
+  );
 }
 
-function SoupsIcon() {
-  return <Soup className={CATEGORY_ORB_SVG_CLASS} strokeWidth={STROKE} aria-hidden />;
+function SoupsIcon({ className, strokeWidth }: CategoryIconProps) {
+  return (
+    <Soup
+      className={cn(CATEGORY_ORB_SVG_CLASS, className)}
+      strokeWidth={strokeWidth ?? STROKE_ORB}
+      aria-hidden
+    />
+  );
 }
 
-function HotDishesIcon() {
-  return <CookingPot className={CATEGORY_ORB_SVG_CLASS} strokeWidth={STROKE} aria-hidden />;
+function HotDishesIcon({ className, strokeWidth }: CategoryIconProps) {
+  return (
+    <CookingPot
+      className={cn(CATEGORY_ORB_SVG_CLASS, className)}
+      strokeWidth={strokeWidth ?? STROKE_ORB}
+      aria-hidden
+    />
+  );
 }
 
-export const CATEGORY_ORB_ICONS: Record<string, FC> = {
+const CATEGORY_ORB_ICONS: Record<string, FC<CategoryIconProps>> = {
   bliny: BlinyIcon,
   desserts: DessertsIcon,
   "savory-pastry": SavoryPastryIcon,
@@ -86,7 +145,21 @@ export const CATEGORY_ORB_ICONS: Record<string, FC> = {
   "hot-dishes": HotDishesIcon,
 };
 
-export function CategoryOrbIcon({ slug }: { slug: string }) {
+export type CategoryOrbVariant = "orb" | "pill";
+
+export function CategoryOrbIcon({
+  slug,
+  variant = "orb",
+}: {
+  slug: string;
+  variant?: CategoryOrbVariant;
+}) {
   const Cmp = CATEGORY_ORB_ICONS[slug] ?? FallbackIcon;
-  return <Cmp />;
+  const pill = variant === "pill";
+  return (
+    <Cmp
+      className={pill ? CATEGORY_PILL_ICON_CLASS : undefined}
+      strokeWidth={pill ? STROKE_PILL : STROKE_ORB}
+    />
+  );
 }

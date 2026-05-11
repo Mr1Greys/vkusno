@@ -63,7 +63,7 @@ export function CategoryNav({ categories }: CategoryNavProps) {
     >
       <div className="container mx-auto max-w-6xl px-4 pb-3.5 pt-2 md:pb-5 md:pt-2.5">
         <nav
-          className="-mx-1 flex gap-2.5 overflow-x-auto px-1 py-1.5 scrollbar-hide sm:gap-3 md:gap-4 md:py-2"
+          className="-mx-1 flex gap-2 overflow-x-auto px-1 py-1 scrollbar-hide sm:gap-2.5 md:gap-3 md:py-1.5"
           aria-label="Категории меню"
         >
           {categories.map((cat) => {
@@ -75,33 +75,30 @@ export function CategoryNav({ categories }: CategoryNavProps) {
                 onClick={() => scrollToCategory(cat.slug)}
                 aria-current={active ? "location" : undefined}
                 className={cn(
-                  "group flex min-w-[4rem] shrink-0 flex-col items-center gap-2 rounded-[20px] py-1.5 pb-2 outline-none focus:outline-none",
-                  "transition-transform active:scale-[0.96] md:min-w-[4.65rem]",
-                  "focus-visible:shadow-[inset_0_0_0_2px_rgba(245,166,35,0.62),0_0_0_3px_#FAF8F5]",
-                  "[-webkit-tap-highlight-color:transparent]"
+                  "group flex max-w-[10.75rem] shrink-0 items-center gap-2 rounded-full px-2.5 py-1.5 sm:max-w-[11.75rem] sm:gap-2.5 sm:px-3 sm:py-2",
+                  "outline-none transition-[transform,background,color,border,box-shadow] duration-200",
+                  "active:scale-[0.98] [-webkit-tap-highlight-color:transparent]",
+                  "focus-visible:ring-2 focus-visible:ring-brand/25 focus-visible:ring-offset-2 focus-visible:ring-offset-cream",
+                  active
+                    ? "bg-brand text-[#FFFCF9] shadow-[0_8px_22px_-10px_rgba(74,60,47,0.38)]"
+                    : cn(
+                        "border border-brand/[0.16] bg-[#FFFCF9]/95 text-brand/90 shadow-[0_2px_14px_-8px_rgba(74,60,47,0.14)]",
+                        "hover:border-brand/28 hover:bg-white hover:text-brand"
+                      )
                 )}
               >
                 <span
                   className={cn(
-                    "flex h-[3.6rem] w-[3.6rem] shrink-0 items-center justify-center rounded-full transition-[box-shadow,color,background,transform] duration-300 md:h-14 md:w-14",
-                    active
-                      ? cn(
-                          "bg-accent text-brand",
-                          "shadow-[0_12px_32px_-16px_rgba(245,166,35,0.55),inset_0_-1px_0_rgba(0,0,0,0.08)]"
-                        )
-                      : cn(
-                          "bg-[#FFFCF9]/95 text-brand group-hover:text-accent",
-                          "shadow-[0_5px_24px_-12px_rgba(74,60,47,0.16),inset_0_0_0_1px_rgba(74,60,47,0.1)]",
-                          "group-hover:bg-white group-hover:shadow-[0_10px_28px_-14px_rgba(74,60,47,0.22),inset_0_0_0_1px_rgba(74,60,47,0.14)]"
-                        )
+                    "flex shrink-0 items-center justify-center",
+                    active ? "text-[#FFFCF9]" : "text-brand/75 group-hover:text-brand"
                   )}
                 >
-                  <CategoryOrbIcon slug={cat.slug} />
+                  <CategoryOrbIcon slug={cat.slug} variant="pill" />
                 </span>
                 <span
                   className={cn(
-                    "max-w-[5.5rem] text-center text-[11px] font-semibold leading-tight tracking-tight md:max-w-[6rem] md:text-[12px]",
-                    active ? "text-text" : "text-text-2 group-hover:text-text"
+                    "min-w-0 flex-1 text-left text-[11px] font-semibold leading-snug tracking-tight sm:text-[12px]",
+                    active ? "text-[#FFFCF9]" : "text-text-2 group-hover:text-text"
                   )}
                 >
                   {cat.name}
