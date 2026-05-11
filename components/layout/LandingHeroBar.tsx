@@ -88,7 +88,7 @@ function PickupSpotLink({ className }: { className?: string }) {
       )}
     >
       <MapPin
-        className="h-[18px] w-[18px] shrink-0 text-brand/90 md:h-5 md:w-5"
+        className="h-[22px] w-[22px] shrink-0 text-brand/90 md:h-5 md:w-5"
         strokeWidth={2}
         aria-hidden
       />
@@ -96,8 +96,8 @@ function PickupSpotLink({ className }: { className?: string }) {
         <span className="block truncate text-[13px] font-semibold leading-snug text-text md:text-[14px]">
           {PICKUP_SPOT}
         </span>
-        <span className="mt-0.5 flex items-center gap-1 text-[11px] font-medium tabular-nums text-text-2 md:text-[12px]">
-          <Clock className="h-3 w-3 shrink-0 opacity-70" aria-hidden />
+        <span className="mt-0.5 flex items-center gap-1 whitespace-nowrap text-[11px] font-medium tabular-nums text-text-2 md:text-[12px]">
+          <Clock className="h-3.5 w-3.5 shrink-0 opacity-70" aria-hidden />
           Время ожидания {WAIT_BLURB}
         </span>
       </span>
@@ -115,10 +115,13 @@ export function LandingHeroBar() {
       <div className="mx-auto max-w-7xl px-3 py-3 md:px-6 md:py-3.5">
         {/* Мобильная: строка 1 — лого | точка самовывоза; строка 2 — переключатель + действия */}
         <div className="flex flex-col gap-3 md:hidden">
-          <div className="flex min-w-0 items-center justify-between gap-2">
-            <BrandLogo variant="hero" />
-            <div className="flex min-w-0 flex-1 justify-end pl-1">
-              <PickupSpotLink className="max-w-[min(100%,13.5rem)] justify-between gap-2 rounded-2xl px-2.5 py-2 sm:max-w-[15rem]" />
+          <div className="flex min-w-0 items-center gap-2.5">
+            <BrandLogo
+              variant="hero"
+              className="shrink-0 origin-left max-md:scale-[1.06] md:scale-100"
+            />
+            <div className="min-w-0 flex-1">
+              <PickupSpotLink className="w-full max-w-none justify-between gap-2 rounded-2xl px-2 py-2" />
             </div>
           </div>
           <div className="flex min-w-0 items-center gap-2">
