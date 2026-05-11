@@ -75,12 +75,12 @@ export function CategoryNav({ categories }: CategoryNavProps) {
                 onClick={() => scrollToCategory(cat.slug)}
                 aria-current={active ? "location" : undefined}
                 className={cn(
-                  "group flex min-h-[44px] max-w-[13rem] shrink-0 items-center gap-2.5 rounded-full px-3.5 py-2 sm:min-h-[48px] sm:max-w-[14.75rem] sm:gap-3 sm:px-4 sm:py-2.5 md:max-w-[15.5rem]",
+                  "group inline-flex min-h-[44px] max-w-[13rem] shrink-0 items-center gap-2.5 rounded-full px-4 py-2.5 sm:min-h-[48px] sm:max-w-[14.75rem] sm:gap-3 sm:px-5 sm:py-3 md:max-w-[15.5rem]",
                   "outline-none transition-[transform,background,color,border,box-shadow] duration-200",
                   "active:scale-[0.98] [-webkit-tap-highlight-color:transparent]",
                   "focus-visible:ring-2 focus-visible:ring-brand/25 focus-visible:ring-offset-2 focus-visible:ring-offset-cream",
                   active
-                    ? "bg-brand text-[#FFFCF9] shadow-[0_8px_22px_-10px_rgba(74,60,47,0.38)]"
+                    ? "border border-transparent bg-brand text-[#FFFCF9] shadow-[0_8px_22px_-10px_rgba(74,60,47,0.38)]"
                     : cn(
                         "border border-brand/[0.16] bg-[#FFFCF9]/95 text-brand/90 shadow-[0_2px_14px_-8px_rgba(74,60,47,0.14)]",
                         "hover:border-brand/28 hover:bg-white hover:text-brand"
@@ -89,7 +89,9 @@ export function CategoryNav({ categories }: CategoryNavProps) {
               >
                 <span
                   className={cn(
-                    "flex shrink-0 items-center justify-center",
+                    "flex size-[22px] shrink-0 items-center justify-center sm:size-6",
+                    "[&_svg]:block [&_svg]:shrink-0",
+                    "translate-y-px",
                     active ? "text-[#FFFCF9]" : "text-brand/75 group-hover:text-brand"
                   )}
                 >
@@ -97,7 +99,7 @@ export function CategoryNav({ categories }: CategoryNavProps) {
                 </span>
                 <span
                   className={cn(
-                    "min-w-0 flex-1 text-left text-[10px] font-semibold uppercase leading-snug tracking-[0.07em] sm:text-[11px] sm:tracking-[0.06em]",
+                    "max-w-[9.25rem] shrink-0 text-left text-[10px] font-semibold uppercase leading-tight tracking-[0.07em] sm:max-w-[10.5rem] sm:text-[11px] sm:tracking-[0.06em]",
                     active ? "text-[#FFFCF9]" : "text-text-2 group-hover:text-text"
                   )}
                 >
