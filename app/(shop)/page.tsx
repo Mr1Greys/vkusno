@@ -26,8 +26,8 @@ export default function LandingPage() {
             Добро пожаловать!
           </h1>
           <p className="mx-auto mt-3 max-w-lg text-[15px] leading-relaxed text-text-2 md:mt-4 md:text-[17px]">
-            Два пространства — пекарня и ресторан. Способ получения заказа и точка самовывоза — в
-            полосе выше.
+            Пекарня и ресторан в одном пространстве. Свежая выпечка, завтраки, десерты и блюда на
+            каждый день.
           </p>
         </div>
       </section>

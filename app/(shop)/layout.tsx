@@ -19,7 +19,7 @@ export default function ShopLayout({
   const showStandardHeader = pathname !== "/";
 
   return (
-    <div className="flex min-h-screen flex-col pb-[var(--mobile-tab-bar-height)] md:pb-0">
+    <div className="flex min-h-screen flex-col gap-8 pb-[var(--mobile-tab-bar-height)] md:pb-0">
       {showStandardHeader ? <Header /> : null}
       <CartDrawer open={isOpen} onOpenChange={closeCart} />
       <main className="flex-1">{children}</main>

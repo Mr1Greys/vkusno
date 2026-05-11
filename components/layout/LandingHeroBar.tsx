@@ -113,14 +113,18 @@ export function LandingHeroBar() {
   return (
     <header className="sticky top-0 z-40 bg-cream/80 backdrop-blur-xl backdrop-saturate-150">
       <div className="mx-auto max-w-7xl px-3 py-3 md:px-6 md:py-3.5">
-        {/* Мобильная */}
+        {/* Мобильная: строка 1 — лого | точка самовывоза; строка 2 — переключатель + действия */}
         <div className="flex flex-col gap-3 md:hidden">
-          <div className="flex items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center justify-between gap-2">
             <BrandLogo variant="hero" />
+            <div className="flex min-w-0 flex-1 justify-end pl-1">
+              <PickupSpotLink className="max-w-[min(100%,13.5rem)] justify-between gap-2 rounded-2xl px-2.5 py-2 sm:max-w-[15rem]" />
+            </div>
+          </div>
+          <div className="flex min-w-0 items-center gap-2">
+            <LandingDeliveryToggle className="min-w-0 flex-1" maxWidthClass="max-w-none" />
             <HeaderActions />
           </div>
-          <LandingDeliveryToggle className="w-full" maxWidthClass="max-w-none" />
-          <PickupSpotLink className="w-full max-w-none justify-between gap-3 rounded-2xl px-3 py-2.5" />
         </div>
 
         {/* Десктоп: три колонки — лого | переключатель по центру | точка + действия */}
