@@ -384,10 +384,10 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="relative mx-auto max-w-2xl px-4 pb-32 pt-8 md:pb-16 md:pt-10">
+    <div className="relative mx-auto min-w-0 max-w-2xl overflow-x-hidden px-4 pb-32 pt-8 md:pb-16 md:pt-10">
       <div
         aria-hidden
-        className="pointer-events-none absolute left-1/2 top-0 h-56 w-[120%] max-w-none -translate-x-1/2 bg-[radial-gradient(ellipse_80%_60%_at_50%_0%,rgba(245,166,35,0.12),transparent_65%)]"
+        className="pointer-events-none absolute inset-x-0 top-0 h-56 bg-[radial-gradient(ellipse_140%_90%_at_50%_-15%,rgba(245,166,35,0.14),transparent_58%)]"
       />
 
       <header className="relative mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
