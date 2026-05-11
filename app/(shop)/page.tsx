@@ -4,35 +4,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { Wheat, Utensils } from "lucide-react";
 import { LandingHeroBar } from "@/components/layout/LandingHeroBar";
-import {
-  IconFreshBake,
-  IconQuality,
-  IconFastDelivery,
-  IconMadeWithLove,
-} from "@/components/landing/BenefitIcons";
-
-const benefitItems = [
-  {
-    Icon: IconFreshBake,
-    title: "Свежая выпечка",
-    sub: "Каждый день из печи — круасаны, хлеб, десерты.",
-  },
-  {
-    Icon: IconQuality,
-    title: "Качество ингредиентов",
-    sub: "Только проверенное сырьё без компромиссов.",
-  },
-  {
-    Icon: IconFastDelivery,
-    title: "Доставка по городу",
-    sub: "Собираем заказ быстро и аккуратно до двери.",
-  },
-  {
-    Icon: IconMadeWithLove,
-    title: "С душой",
-    sub: "Готовим так, как угощаем родных.",
-  },
-] as const;
 
 export default function LandingPage() {
   return (
@@ -123,39 +94,6 @@ export default function LandingPage() {
             </div>
           </Link>
         </div>
-
-        <section className="mx-auto mt-20 max-w-4xl border-t border-border/70 pt-14 md:mt-24 md:pt-16">
-          <div className="mb-10 md:mb-12">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-text-3">
-              Наши опоры
-            </p>
-            <h2 className="mt-2 font-display text-2xl font-bold tracking-tight text-text md:text-[1.75rem]">
-              Без лишних блоков — просто то, во что верим
-            </h2>
-          </div>
-
-          <div className="grid gap-10 sm:gap-12 md:grid-cols-2 md:gap-x-16 md:gap-y-12">
-            {benefitItems.map(({ Icon, title, sub }, i) => (
-              <div key={title} className="flex gap-5 md:gap-6">
-                <Icon
-                  className="h-11 w-11 shrink-0 text-brand md:h-12 md:w-12"
-                  aria-hidden
-                />
-                <div className="min-w-0 pt-0.5">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-text-3">
-                    {String(i + 1).padStart(2, "0")}
-                  </p>
-                  <h3 className="mt-2 text-lg font-bold leading-snug text-text md:text-[1.15rem]">
-                    {title}
-                  </h3>
-                  <p className="mt-2 max-w-[22rem] text-[15px] leading-relaxed text-text-2">
-                    {sub}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
       </div>
     </div>
   );
