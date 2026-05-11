@@ -4,10 +4,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { Wheat, Utensils } from "lucide-react";
 import { LandingHeroBar } from "@/components/layout/LandingHeroBar";
+import { MobileWelcomeScreen } from "@/components/landing/MobileWelcomeScreen";
 
 export default function LandingPage() {
   return (
     <div className="relative min-h-screen overflow-hidden bg-cream">
+      <MobileWelcomeScreen />
       <LandingHeroBar />
 
       <div
