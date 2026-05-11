@@ -25,7 +25,7 @@ const STROKE_PILL = 1.15;
 export const CATEGORY_ORB_SVG_CLASS =
   "h-8 w-8 shrink-0 md:h-8 md:w-8";
 
-export const CATEGORY_PILL_ICON_CLASS = "h-[1.15rem] w-[1.15rem] shrink-0 sm:h-5 sm:w-5";
+export const CATEGORY_PILL_ICON_CLASS = "h-5 w-5 shrink-0 sm:h-6 sm:w-6";
 
 export type CategoryIconProps = {
   className?: string;

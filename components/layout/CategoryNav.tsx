@@ -63,7 +63,7 @@ export function CategoryNav({ categories }: CategoryNavProps) {
     >
       <div className="container mx-auto max-w-6xl px-4 pb-3.5 pt-2 md:pb-5 md:pt-2.5">
         <nav
-          className="-mx-1 flex gap-2 overflow-x-auto px-1 py-1 scrollbar-hide sm:gap-2.5 md:gap-3 md:py-1.5"
+          className="-mx-1 flex gap-2.5 overflow-x-auto px-1 py-1.5 scrollbar-hide sm:gap-3 md:gap-3.5 md:py-2"
           aria-label="Категории меню"
         >
           {categories.map((cat) => {
@@ -75,7 +75,7 @@ export function CategoryNav({ categories }: CategoryNavProps) {
                 onClick={() => scrollToCategory(cat.slug)}
                 aria-current={active ? "location" : undefined}
                 className={cn(
-                  "group flex max-w-[10.75rem] shrink-0 items-center gap-2 rounded-full px-2.5 py-1.5 sm:max-w-[11.75rem] sm:gap-2.5 sm:px-3 sm:py-2",
+                  "group flex min-h-[44px] max-w-[13rem] shrink-0 items-center gap-2.5 rounded-full px-3.5 py-2 sm:min-h-[48px] sm:max-w-[14.75rem] sm:gap-3 sm:px-4 sm:py-2.5 md:max-w-[15.5rem]",
                   "outline-none transition-[transform,background,color,border,box-shadow] duration-200",
                   "active:scale-[0.98] [-webkit-tap-highlight-color:transparent]",
                   "focus-visible:ring-2 focus-visible:ring-brand/25 focus-visible:ring-offset-2 focus-visible:ring-offset-cream",
@@ -97,7 +97,7 @@ export function CategoryNav({ categories }: CategoryNavProps) {
                 </span>
                 <span
                   className={cn(
-                    "min-w-0 flex-1 text-left text-[11px] font-semibold leading-snug tracking-tight sm:text-[12px]",
+                    "min-w-0 flex-1 text-left text-[10px] font-semibold uppercase leading-snug tracking-[0.07em] sm:text-[11px] sm:tracking-[0.06em]",
                     active ? "text-[#FFFCF9]" : "text-text-2 group-hover:text-text"
                   )}
                 >
