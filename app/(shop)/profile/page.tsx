@@ -390,22 +390,22 @@ export default function ProfilePage() {
         className="pointer-events-none absolute inset-x-0 top-0 h-56 bg-[radial-gradient(ellipse_140%_90%_at_50%_-15%,rgba(245,166,35,0.14),transparent_58%)]"
       />
 
-      <header className="relative mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
+      <header className="relative mb-6 flex min-w-0 flex-row items-center justify-between gap-3 md:mb-7">
+        <div className="min-w-0 flex-1">
           <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-coffee">
             Личный кабинет
           </p>
-          <h1 className="font-display text-[1.85rem] font-bold tracking-tight text-text md:text-[2rem]">
+          <h1 className="font-display text-[1.65rem] font-bold leading-tight tracking-tight text-text sm:text-[1.85rem] md:text-[2rem]">
             Профиль
           </h1>
         </div>
         <Button
           type="button"
           variant="outline"
-          className="h-11 shrink-0 gap-2 rounded-full border-border/80 px-5 text-[14px] font-semibold"
+          className="h-9 shrink-0 gap-1.5 rounded-full border-border/80 px-3.5 text-[13px] font-semibold sm:h-10 sm:gap-2 sm:px-4 sm:text-[14px]"
           onClick={handleLogout}
         >
-          <LogOut className="h-4 w-4" aria-hidden />
+          <LogOut className="h-3.5 w-3.5 sm:h-4 sm:w-4" aria-hidden />
           Выйти
         </Button>
       </header>
