@@ -77,23 +77,13 @@ export function BonusQrScanner({
   const lastTokenRef = useRef<string>("");
   const cooldownRef = useRef<number>(0);
   const decodeOnceDoneRef = useRef(false);
+  const onDecodedRef = useRef(onDecoded);
+  const onCameraStateRef = useRef(onCameraState);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [needsTapPlay, setNeedsTapPlay] = useState(false);
 
-  const handleDecode = useCallback(
-    (text: string) => {
-      const token = extractLoyaltyQrJwt(text);
-      if (!token) return;
-      const now = Date.now();
-      if (token === lastTokenRef.current && now - cooldownRef.current < 3200) {
-        return;
-      }
-      lastTokenRef.current = token;
-      cooldownRef.current = now;
-      onDecoded(token);
-    },
-    [onDecoded]
-  );
+  onDecodedRef.current = onDecoded;
+  onCameraStateRef.current = onCameraState;
 
   useEffect(() => {
     decodeOnceDoneRef.current = false;
@@ -108,7 +98,7 @@ export function BonusQrScanner({
       }
       setCameraError(null);
       setNeedsTapPlay(false);
-      onCameraState?.("idle");
+      onCameraStateRef.current?.("idle");
       return;
     }
 
@@ -119,12 +109,12 @@ export function BonusQrScanner({
 
     const reader = new BrowserMultiFormatReader(hints, {
       tryPlayVideoTimeout: 16000,
-      delayBetweenScanAttempts: 220,
+      delayBetweenScanAttempts: 280,
     });
 
     const start = async () => {
       const waitForVideoEl = async (): Promise<HTMLVideoElement | null> => {
-        for (let i = 0; i < 30; i++) {
+        for (let i = 0; i < 45; i++) {
           if (cancelled) return null;
           const el = videoRef.current;
           if (el) return el;
@@ -136,7 +126,7 @@ export function BonusQrScanner({
       const videoEl = await waitForVideoEl();
       if (cancelled || !videoEl) return;
 
-      onCameraState?.("starting");
+      onCameraStateRef.current?.("starting");
       setCameraError(null);
       setNeedsTapPlay(false);
 
@@ -164,7 +154,7 @@ export function BonusQrScanner({
           } catch {
             /* ignore */
           }
-          handleDecode(raw);
+          onDecodedRef.current(token);
         };
 
         const controls = await withTimeout(
@@ -178,9 +168,10 @@ export function BonusQrScanner({
           return;
         }
         controlsRef.current = controls;
-        onCameraState?.("live");
+        onCameraStateRef.current?.("live");
 
         videoEl.setAttribute("playsinline", "true");
+        videoEl.setAttribute("webkit-playsinline", "true");
         videoEl.playsInline = true;
         videoEl.muted = true;
         try {
@@ -209,7 +200,7 @@ export function BonusQrScanner({
             ? e.message
             : "Не удалось открыть камеру. Разрешите доступ и используйте HTTPS.";
         setCameraError(msg);
-        onCameraState?.("error");
+        onCameraStateRef.current?.("error");
       }
     };
 
@@ -224,9 +215,9 @@ export function BonusQrScanner({
       if (videoRef.current) {
         videoRef.current.srcObject = null;
       }
-      onCameraState?.("idle");
+      onCameraStateRef.current?.("idle");
     };
-  }, [active, handleDecode, onCameraState]);
+  }, [active]);
 
   const resumePreview = useCallback(async () => {
     const v = videoRef.current;
@@ -242,41 +233,32 @@ export function BonusQrScanner({
   return (
     <div className={cn("mx-auto w-full max-w-[280px] space-y-2", className)}>
       <div className="rounded-2xl border border-border/70 bg-gradient-to-b from-[#faf7f2] via-[#f4efe6] to-[#ebe4d9] p-2 shadow-sm">
-        <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl border border-[#3d3830]/25 bg-[#1e1c18] shadow-[inset_0_2px_24px_rgba(0,0,0,0.45)]">
+        <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl border border-border/60 bg-cream">
           <video
             ref={videoRef}
-            className="absolute inset-0 z-[1] h-full w-full object-cover opacity-[0.97] [transform:translateZ(0)]"
+            className="absolute inset-0 z-[1] h-full w-full bg-cream object-contain"
             muted
             playsInline
             autoPlay
           />
-          <div
-            className="pointer-events-none absolute inset-0 z-[2] flex items-center justify-center p-[9%]"
-            aria-hidden
-          >
-            <div className="relative h-full w-full rounded-[14px] border border-dashed border-brand/35">
-              <span className="absolute left-1.5 top-1.5 h-6 w-6 rounded-tl-[4px] border-l-[3px] border-t-[3px] border-brand shadow-[0_0_10px_rgba(74,60,47,0.22)]" />
-              <span className="absolute right-1.5 top-1.5 h-6 w-6 rounded-tr-[4px] border-r-[3px] border-t-[3px] border-brand shadow-[0_0_10px_rgba(74,60,47,0.22)]" />
-              <span className="absolute bottom-1.5 left-1.5 h-6 w-6 rounded-bl-[4px] border-b-[3px] border-l-[3px] border-brand shadow-[0_0_10px_rgba(74,60,47,0.22)]" />
-              <span className="absolute bottom-1.5 right-1.5 h-6 w-6 rounded-br-[4px] border-b-[3px] border-r-[3px] border-brand shadow-[0_0_10px_rgba(74,60,47,0.22)]" />
-              {active ? (
-                <div className="absolute inset-[8%] overflow-hidden rounded-lg">
-                  <div className="absolute left-[6%] right-[6%] h-0.5 rounded-full bg-emerald-300/90 shadow-[0_0_12px_rgba(52,211,153,0.75)] animate-bonus-scanline" />
-                </div>
-              ) : null}
-            </div>
+          {/* Только углы рамки — без сплошного слоя поверх кадра (iOS иначе даёт чёрный превью). */}
+          <div className="pointer-events-none absolute inset-0 z-[2] p-[7%]" aria-hidden>
+            <span className="absolute left-[7%] top-[7%] h-7 w-7 rounded-tl-[5px] border-l-[3px] border-t-[3px] border-brand/90 shadow-sm" />
+            <span className="absolute right-[7%] top-[7%] h-7 w-7 rounded-tr-[5px] border-r-[3px] border-t-[3px] border-brand/90 shadow-sm" />
+            <span className="absolute bottom-[7%] left-[7%] h-7 w-7 rounded-bl-[5px] border-b-[3px] border-l-[3px] border-brand/90 shadow-sm" />
+            <span className="absolute bottom-[7%] right-[7%] h-7 w-7 rounded-br-[5px] border-b-[3px] border-r-[3px] border-brand/90 shadow-sm" />
           </div>
           {active && needsTapPlay ? (
             <button
               type="button"
               onClick={resumePreview}
-              className="absolute inset-0 z-20 flex items-center justify-center bg-[#1a1814]/72 px-4 text-center text-sm font-medium text-[#faf8f5] backdrop-blur-[3px]"
+              className="absolute inset-0 z-20 flex items-center justify-center bg-black/50 px-4 text-center text-sm font-medium text-white backdrop-blur-[2px]"
             >
               Нажмите, чтобы включить предпросмотр камеры
             </button>
           ) : null}
           {active ? (
-            <p className="pointer-events-none absolute bottom-2.5 left-2 right-2 z-[3] text-center text-[10px] font-semibold uppercase tracking-[0.12em] text-white/95 drop-shadow-[0_1px_3px_rgba(0,0,0,0.85)]">
+            <p className="pointer-events-none absolute bottom-2 left-2 right-2 z-[3] text-center text-[10px] font-semibold uppercase tracking-[0.1em] text-text shadow-[0_1px_0_rgba(255,255,255,0.85)]">
               Наведите рамку на QR в приложении клиента
             </p>
           ) : null}

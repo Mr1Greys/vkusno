@@ -147,7 +147,7 @@ function AdminBonusesInner() {
     };
   }, [scannerModalOpen]);
 
-  const onQrDecoded = async (token: string) => {
+  const onQrDecoded = useCallback(async (token: string) => {
     const seq = ++verifyGen.current;
     setScanMessage("");
     setLookupError("");
@@ -172,7 +172,7 @@ function AdminBonusesInner() {
     setModalAmount("");
     setModalReason("");
     setBonusModalOpen(true);
-  };
+  }, []);
 
   const lookupByPhone = async () => {
     setLookupError("");
