@@ -13,6 +13,7 @@ type BonusQrScannerProps = {
   active: boolean;
   /** Состояние камеры / первого кадра */
   onCameraState?: (state: "idle" | "starting" | "live" | "error") => void;
+  className?: string;
 };
 
 function disposeStream(stream: MediaStream | null) {
@@ -68,6 +69,7 @@ export function BonusQrScanner({
   onDecoded,
   active,
   onCameraState,
+  className,
 }: BonusQrScannerProps) {
   const controlsRef = useRef<IScannerControls | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -238,45 +240,47 @@ export function BonusQrScanner({
   }, []);
 
   return (
-    <div className="mx-auto w-full max-w-[280px] space-y-2">
-      <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl border border-border bg-black shadow-inner ring-1 ring-black/20">
-        <video
-          ref={videoRef}
-          className="absolute inset-0 z-[1] h-full w-full object-cover [transform:translateZ(0)]"
-          muted
-          playsInline
-          autoPlay
-        />
-        <div
-          className="pointer-events-none absolute inset-0 z-[2] flex items-center justify-center p-[10%]"
-          aria-hidden
-        >
-          <div className="relative h-full w-full rounded-xl border-2 border-dashed border-white/50">
-            <span className="absolute left-2 top-2 h-5 w-5 border-l-2 border-t-2 border-white" />
-            <span className="absolute right-2 top-2 h-5 w-5 border-r-2 border-t-2 border-white" />
-            <span className="absolute bottom-2 left-2 h-5 w-5 border-b-2 border-l-2 border-white" />
-            <span className="absolute bottom-2 right-2 h-5 w-5 border-b-2 border-r-2 border-white" />
-            {active ? (
-              <div className="absolute inset-[8%] overflow-hidden rounded-lg">
-                <div className="absolute left-[6%] right-[6%] h-0.5 rounded-full bg-emerald-300/95 shadow-[0_0_14px_rgba(52,211,153,0.9)] animate-bonus-scanline" />
-              </div>
-            ) : null}
-          </div>
-        </div>
-        {active && needsTapPlay ? (
-          <button
-            type="button"
-            onClick={resumePreview}
-            className="absolute inset-0 z-20 flex items-center justify-center bg-black/45 px-4 text-center text-sm font-medium text-white backdrop-blur-[2px]"
+    <div className={cn("mx-auto w-full max-w-[280px] space-y-2", className)}>
+      <div className="rounded-2xl border border-border/70 bg-gradient-to-b from-[#faf7f2] via-[#f4efe6] to-[#ebe4d9] p-2 shadow-sm">
+        <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl border border-[#3d3830]/25 bg-[#1e1c18] shadow-[inset_0_2px_24px_rgba(0,0,0,0.45)]">
+          <video
+            ref={videoRef}
+            className="absolute inset-0 z-[1] h-full w-full object-cover opacity-[0.97] [transform:translateZ(0)]"
+            muted
+            playsInline
+            autoPlay
+          />
+          <div
+            className="pointer-events-none absolute inset-0 z-[2] flex items-center justify-center p-[9%]"
+            aria-hidden
           >
-            Нажмите, чтобы включить предпросмотр камеры
-          </button>
-        ) : null}
-        {active ? (
-          <p className="pointer-events-none absolute bottom-2 left-0 right-0 z-[3] text-center text-[10px] font-semibold uppercase tracking-[0.14em] text-white/90 drop-shadow">
-            Наведите рамку на QR в приложении клиента
-          </p>
-        ) : null}
+            <div className="relative h-full w-full rounded-[14px] border border-dashed border-brand/35">
+              <span className="absolute left-1.5 top-1.5 h-6 w-6 rounded-tl-[4px] border-l-[3px] border-t-[3px] border-brand shadow-[0_0_10px_rgba(74,60,47,0.22)]" />
+              <span className="absolute right-1.5 top-1.5 h-6 w-6 rounded-tr-[4px] border-r-[3px] border-t-[3px] border-brand shadow-[0_0_10px_rgba(74,60,47,0.22)]" />
+              <span className="absolute bottom-1.5 left-1.5 h-6 w-6 rounded-bl-[4px] border-b-[3px] border-l-[3px] border-brand shadow-[0_0_10px_rgba(74,60,47,0.22)]" />
+              <span className="absolute bottom-1.5 right-1.5 h-6 w-6 rounded-br-[4px] border-b-[3px] border-r-[3px] border-brand shadow-[0_0_10px_rgba(74,60,47,0.22)]" />
+              {active ? (
+                <div className="absolute inset-[8%] overflow-hidden rounded-lg">
+                  <div className="absolute left-[6%] right-[6%] h-0.5 rounded-full bg-emerald-300/90 shadow-[0_0_12px_rgba(52,211,153,0.75)] animate-bonus-scanline" />
+                </div>
+              ) : null}
+            </div>
+          </div>
+          {active && needsTapPlay ? (
+            <button
+              type="button"
+              onClick={resumePreview}
+              className="absolute inset-0 z-20 flex items-center justify-center bg-[#1a1814]/72 px-4 text-center text-sm font-medium text-[#faf8f5] backdrop-blur-[3px]"
+            >
+              Нажмите, чтобы включить предпросмотр камеры
+            </button>
+          ) : null}
+          {active ? (
+            <p className="pointer-events-none absolute bottom-2.5 left-2 right-2 z-[3] text-center text-[10px] font-semibold uppercase tracking-[0.12em] text-white/95 drop-shadow-[0_1px_3px_rgba(0,0,0,0.85)]">
+              Наведите рамку на QR в приложении клиента
+            </p>
+          ) : null}
+        </div>
       </div>
       {cameraError ? (
         <p className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive">

@@ -3,7 +3,15 @@
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Gift, Search, Camera, CheckCircle2, Loader2, AlertCircle } from "lucide-react";
+import {
+  Gift,
+  Search,
+  Camera,
+  CheckCircle2,
+  Loader2,
+  AlertCircle,
+  ScanLine,
+} from "lucide-react";
 import { BonusQrScanner } from "@/components/admin/BonusQrScanner";
 import { Button } from "@/components/ui/button";
 import {
@@ -44,7 +52,7 @@ function AdminBonusesInner() {
   const urlParams = useSearchParams();
   const urlOrderId = urlParams.get("orderId")?.trim() ?? "";
 
-  const [scannerOn, setScannerOn] = useState(false);
+  const [scannerModalOpen, setScannerModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserPreview | null>(null);
   const [scanMessage, setScanMessage] = useState("");
   const [phoneLookup, setPhoneLookup] = useState("");
@@ -72,9 +80,9 @@ function AdminBonusesInner() {
   const [modalReason, setModalReason] = useState("");
   const verifyGen = useRef(0);
   const operationRef = useRef<HTMLElement | null>(null);
-  const prevScannerOn = useRef(scannerOn);
+  const prevScannerModalOpen = useRef(scannerModalOpen);
   const cameraScanActive =
-    scannerOn && qrVerify !== "verifying" && qrVerify !== "found";
+    scannerModalOpen && qrVerify !== "verifying" && qrVerify !== "found";
 
   const historyQuery = useMemo(() => {
     const p = new URLSearchParams();
@@ -110,13 +118,13 @@ function AdminBonusesInner() {
   }, [loadHistory]);
 
   useEffect(() => {
-    if (prevScannerOn.current && !scannerOn) {
+    if (prevScannerModalOpen.current && !scannerModalOpen) {
       setCameraState("idle");
       verifyGen.current += 1;
       setQrVerify((prev) => (prev === "verifying" ? "idle" : prev));
     }
-    prevScannerOn.current = scannerOn;
-  }, [scannerOn]);
+    prevScannerModalOpen.current = scannerModalOpen;
+  }, [scannerModalOpen]);
 
   const onQrDecoded = async (token: string) => {
     const seq = ++verifyGen.current;
@@ -138,7 +146,7 @@ function AdminBonusesInner() {
     setQrVerify("found");
     setSelectedUser(data.user);
     setScanMessage(`Клиент найден: ${data.user.phone}`);
-    setScannerOn(false);
+    setScannerModalOpen(false);
     setBonusModalSource("QR");
     setModalAmount("");
     setModalReason("");
@@ -164,7 +172,7 @@ function AdminBonusesInner() {
     setSelectedUser(data.user);
     setQrVerify("found");
     setScanMessage(`Клиент найден: ${data.user.phone}`);
-    setScannerOn(false);
+    setScannerModalOpen(false);
     setBonusModalSource("PHONE");
     setModalAmount("");
     setModalReason("");
@@ -256,25 +264,85 @@ function AdminBonusesInner() {
             Сканер QR
           </div>
           <p className="text-xs leading-relaxed text-text-2">
-            Наведите камеру на QR из раздела «Бонусы» в профиле клиента в нашем приложении —
-            это не платёжный QR банка. Если код не читается, проверьте яркость экрана и
-            расстояние 15–25 см.
+            Нажмите кнопку, чтобы открыть окно с камерой. Наведите её на QR из раздела «Бонусы» в
+            приложении клиента — это не банковский платёжный код.
           </p>
-          <label className="flex cursor-pointer items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={scannerOn}
-              onChange={(e) => setScannerOn(e.target.checked)}
-              className="h-4 w-4 accent-brand"
+          <div className="flex flex-wrap items-center gap-4">
+            <button
+              type="button"
+              onClick={() => {
+                setQrVerify("idle");
+                setScanMessage("");
+                setScannerModalOpen(true);
+              }}
+              className="group flex h-[4.25rem] w-[4.25rem] shrink-0 items-center justify-center rounded-2xl border border-border/90 bg-white shadow-[0_6px_22px_-10px_rgba(74,60,47,0.4)] transition hover:-translate-y-0.5 hover:border-brand/40 hover:shadow-lg active:translate-y-0 active:scale-[0.97]"
+              aria-label="Открыть сканер QR-кода"
+            >
+              <ScanLine
+                className="h-[2.15rem] w-[2.15rem] text-brand transition group-hover:text-brand-hover"
+                strokeWidth={2.25}
+                aria-hidden
+              />
+            </button>
+            {scanMessage && !scannerModalOpen ? (
+              <p
+                className={cn(
+                  "min-w-0 flex-1 text-sm",
+                  qrVerify === "error" ? "text-destructive" : "text-text-2"
+                )}
+              >
+                {scanMessage}
+              </p>
+            ) : null}
+          </div>
+        </section>
+
+        <section className="space-y-4 rounded-lg border border-border bg-surface-1 p-4">
+          <div className="flex items-center gap-2 font-semibold">
+            <Search className="h-4 w-4" />
+            По телефону
+          </div>
+          <div className="flex gap-2">
+            <Input
+              placeholder="+79991234567"
+              value={phoneLookup}
+              onChange={(e) => setPhoneLookup(e.target.value)}
             />
-            Включить камеру
-          </label>
-          <BonusQrScanner
-            active={cameraScanActive}
-            onDecoded={onQrDecoded}
-            onCameraState={setCameraState}
-          />
-          <div className="space-y-2 rounded-xl border border-border/80 bg-surface-2/60 p-3">
+            <Button type="button" variant="secondary" onClick={lookupByPhone}>
+              Найти
+            </Button>
+          </div>
+        </section>
+      </div>
+
+      <Dialog open={scannerModalOpen} onOpenChange={setScannerModalOpen}>
+        <DialogContent
+          className={cn(
+            "w-full gap-0 overflow-hidden border-border/90 p-0 sm:max-w-[min(100vw-1.5rem,440px)]",
+            "max-sm:fixed max-sm:inset-x-0 max-sm:bottom-0 max-sm:top-auto max-sm:max-h-[min(92dvh,680px)] max-sm:translate-x-0 max-sm:translate-y-0 max-sm:rounded-b-none max-sm:rounded-t-[1.75rem] max-sm:border-x-0 max-sm:border-b-0"
+          )}
+        >
+          <div className="border-b border-border/60 bg-surface-1 px-5 pb-4 pt-6 pr-12">
+            <DialogHeader className="space-y-2 text-left">
+              <DialogTitle className="font-display text-lg sm:text-xl">
+                Сканер QR
+              </DialogTitle>
+            </DialogHeader>
+            <p className="mt-3 text-sm leading-relaxed text-text-2">
+              Наведите камеру на QR из раздела «Бонусы» в профиле клиента в нашем приложении — это
+              не платёжный QR банка. Если код не читается, проверьте яркость экрана и расстояние
+              15–25 см.
+            </p>
+          </div>
+          <div className="border-b border-border/40 bg-surface-2/35 px-4 py-5 sm:px-5">
+            <BonusQrScanner
+              active={cameraScanActive}
+              onDecoded={onQrDecoded}
+              onCameraState={setCameraState}
+              className="max-w-full sm:max-w-md"
+            />
+          </div>
+          <div className="space-y-2 rounded-b-lg bg-[#efe8df]/95 px-4 py-4 sm:px-5">
             <div className="flex flex-wrap items-center gap-2">
               <span
                 className={cn(
@@ -301,10 +369,10 @@ function AdminBonusesInner() {
                 {cameraState === "error" ? (
                   <AlertCircle className="h-3.5 w-3.5" aria-hidden />
                 ) : null}
-                {cameraState === "idle" && !scannerOn
-                  ? "Камера выключена"
+                {cameraState === "idle" && cameraScanActive
+                  ? "Ожидание камеры…"
                   : cameraState === "idle"
-                    ? "Камера"
+                    ? "Камера выключена"
                     : cameraState === "starting"
                       ? "Запуск…"
                       : cameraState === "live"
@@ -353,30 +421,13 @@ function AdminBonusesInner() {
             ) : null}
             {qrVerify === "found" && selectedUser ? (
               <p className="text-sm text-emerald-800">
-                Клиент выбран — открыто окно операции. После закрытия можно снова включить камеру для
+                Клиент выбран — открыто окно операции. После закрытия нажмите кнопку сканера для
                 следующего гостя.
               </p>
             ) : null}
           </div>
-        </section>
-
-        <section className="space-y-4 rounded-lg border border-border bg-surface-1 p-4">
-          <div className="flex items-center gap-2 font-semibold">
-            <Search className="h-4 w-4" />
-            По телефону
-          </div>
-          <div className="flex gap-2">
-            <Input
-              placeholder="+79991234567"
-              value={phoneLookup}
-              onChange={(e) => setPhoneLookup(e.target.value)}
-            />
-            <Button type="button" variant="secondary" onClick={lookupByPhone}>
-              Найти
-            </Button>
-          </div>
-        </section>
-      </div>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={bonusModalOpen} onOpenChange={onBonusModalOpenChange}>
         <DialogContent className="max-h-[min(90vh,640px)] w-[min(100vw-1.5rem,26rem)] gap-4 overflow-y-auto p-5 sm:p-6">
