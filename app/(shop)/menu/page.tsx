@@ -36,15 +36,26 @@ export default function MenuPage() {
     [categories, searchQuery]
   );
 
+  /** Категории с хотя бы одним товаром (из БД могут прийти пустые блоки). */
+  const visibleCategories = useMemo(
+    () => filteredCategories.filter((c) => c.products.length > 0),
+    [filteredCategories]
+  );
+
   const navCategories = useMemo(
     () =>
-      filteredCategories.map((c) => ({
+      visibleCategories.map((c) => ({
         id: c.id,
         name: c.name,
         slug: c.slug,
       })),
-    [filteredCategories]
+    [visibleCategories]
   );
+
+  const catalogEmpty =
+    !loading &&
+    searchQuery.trim().length === 0 &&
+    visibleCategories.length === 0;
 
   if (loading) {
     return (
@@ -77,9 +88,26 @@ export default function MenuPage() {
         promoImageAlt="Акции и специальные предложения — свежая выпечка"
       />
 
-      <CategoryNav categories={navCategories} />
+      {navCategories.length > 0 ? <CategoryNav categories={navCategories} /> : null}
 
       <div className="container mx-auto max-w-6xl space-y-14 px-4 py-10">
+        {catalogEmpty && (
+          <div className="rounded-[24px] border border-border/60 bg-surface-1 px-6 py-10 text-center shadow-card">
+            <p className="text-[15px] font-medium text-text">
+              В меню пока нет позиций
+            </p>
+            <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-text-2">
+              Страница берёт товары из базы данных. Если вы недавно подключили пустую
+              БД или не запускали сид, выполните в корне проекта:{" "}
+              <code className="rounded bg-surface-2 px-1.5 py-0.5 text-[13px]">
+                npx prisma db seed
+              </code>
+              . Либо добавьте категории и товары в{" "}
+              <span className="font-medium text-text">админке → Товары</span>.
+            </p>
+          </div>
+        )}
+
         {isEmptySearch && (
           <p className="rounded-[24px] border border-border/60 bg-surface-1 px-6 py-8 text-center text-[15px] leading-relaxed text-text-2 shadow-card">
             По запросу «{searchQuery.trim()}» ничего не нашлось. Попробуйте
@@ -87,7 +115,7 @@ export default function MenuPage() {
           </p>
         )}
 
-        {filteredCategories.map((category) => (
+        {visibleCategories.map((category) => (
           <section
             key={category.id}
             id={category.slug}

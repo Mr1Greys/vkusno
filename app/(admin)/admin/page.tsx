@@ -45,30 +45,35 @@ export default async function AdminDashboard() {
 
   return (
     <div>
-      <h1 className="text-2xl font-display font-bold mb-6">Обзор</h1>
+      <h1 className="mb-5 font-display text-2xl font-bold tracking-tight text-text md:mb-6 md:text-3xl">
+        Обзор
+      </h1>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <div className="bg-surface-1 p-4 rounded-lg border border-border">
-          <p className="text-text-2 text-sm">Заказов сегодня</p>
-          <p className="text-2xl font-bold">{stats.ordersToday}</p>
+      <div className="mb-8 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
+        <div className="rounded-xl border border-border bg-surface-1 p-4 shadow-sm sm:p-5">
+          <p className="text-sm text-text-2">Заказов сегодня</p>
+          <p className="mt-1 text-2xl font-bold tabular-nums md:text-3xl">{stats.ordersToday}</p>
         </div>
-        <div className="bg-surface-1 p-4 rounded-lg border border-border">
-          <p className="text-text-2 text-sm">Всего заказов</p>
-          <p className="text-2xl font-bold">{stats.totalOrders}</p>
+        <div className="rounded-xl border border-border bg-surface-1 p-4 shadow-sm sm:p-5">
+          <p className="text-sm text-text-2">Всего заказов</p>
+          <p className="mt-1 text-2xl font-bold tabular-nums md:text-3xl">{stats.totalOrders}</p>
         </div>
-        <div className="bg-surface-1 p-4 rounded-lg border border-border">
-          <p className="text-text-2 text-sm">Клиентов</p>
-          <p className="text-2xl font-bold">{stats.totalUsers}</p>
+        <div className="rounded-xl border border-border bg-surface-1 p-4 shadow-sm sm:p-5">
+          <p className="text-sm text-text-2">Клиентов</p>
+          <p className="mt-1 text-2xl font-bold tabular-nums md:text-3xl">{stats.totalUsers}</p>
         </div>
-        <div className="bg-surface-1 p-4 rounded-lg border border-border">
-          <p className="text-text-2 text-sm">Выручка</p>
-          <p className="text-2xl font-bold">{formatPrice(stats.revenue)}</p>
+        <div className="rounded-xl border border-border bg-surface-1 p-4 shadow-sm sm:p-5">
+          <p className="text-sm text-text-2">Выручка</p>
+          <p className="mt-1 text-2xl font-bold tabular-nums md:text-3xl">{formatPrice(stats.revenue)}</p>
         </div>
       </div>
 
-      <h2 className="text-xl font-semibold mb-4">Последние заказы</h2>
-      <div className="bg-surface-1 rounded-lg border border-border overflow-hidden">
-        <table className="w-full">
+      <h2 className="mb-3 font-display text-lg font-bold text-text md:mb-4 md:text-xl">
+        Последние заказы
+      </h2>
+      <div className="min-w-0 overflow-hidden rounded-xl border border-border bg-surface-1 shadow-sm">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[640px]">
           <thead className="bg-surface-2">
             <tr>
               <th className="text-left p-3 text-sm font-medium">Заказ</th>
@@ -102,6 +107,7 @@ export default async function AdminDashboard() {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   );

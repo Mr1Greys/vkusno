@@ -5,6 +5,7 @@ import { Product } from "@/types";
 import { useCartStore } from "@/store/cartStore";
 import { useFavoritesStore } from "@/store/favoritesStore";
 import { cn, formatPrice } from "@/lib/utils";
+import { remainingAfterCart, isAtStockCeiling } from "@/lib/cart-stock";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ProductCardImage } from "@/components/shop/ProductCardImage";
@@ -20,15 +21,22 @@ export function ProductCard({ product, onClick }: ProductCardProps) {
   const isFavorite = useFavoritesStore((s) => s.ids.includes(product.id));
   const cartItem = items.find((i) => i.productId === product.id);
   const inCart = !!cartItem;
+  const cartQty = cartItem?.quantity ?? 0;
+  const stockTracked = product.stockQuantity != null;
+  const remaining = remainingAfterCart(product.stockQuantity, cartQty);
+  const noneLeft = stockTracked && remaining === 0;
+  const atCeiling = isAtStockCeiling(product.stockQuantity, cartQty);
 
   const handleAdd = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
+    if (atCeiling) return;
     addItem({
       id: product.id,
       productId: product.id,
       name: product.name,
       price: product.price,
       imageUrl: product.imageUrl,
+      stockQuantity: product.stockQuantity,
     });
   };
 
@@ -85,6 +93,18 @@ export function ProductCard({ product, onClick }: ProductCardProps) {
               </span>
             )}
             {product.isHalal && <Badge variant="halal">Халяль</Badge>}
+            {stockTracked && remaining !== null ? (
+              <span
+                className={cn(
+                  "rounded-full px-2 py-0.5 font-medium sm:px-3 sm:py-1",
+                  noneLeft
+                    ? "bg-error/10 text-error"
+                    : "bg-surface-2 text-coffee"
+                )}
+              >
+                {noneLeft ? "Нет в наличии" : `Осталось: ${remaining}`}
+              </span>
+            ) : null}
           </div>
         </div>
 
@@ -122,6 +142,7 @@ export function ProductCard({ product, onClick }: ProductCardProps) {
                   size="icon"
                   variant="ghost"
                   className="h-8 w-8 rounded-full sm:h-9 sm:w-9 md:h-10 md:w-10"
+                  disabled={atCeiling}
                   onClick={handleAdd}
                 >
                   <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
@@ -132,6 +153,7 @@ export function ProductCard({ product, onClick }: ProductCardProps) {
                 type="button"
                 size="sm"
                 className="h-9 shrink-0 gap-1 rounded-full bg-brand px-2.5 text-[11px] font-semibold text-white shadow-sm hover:bg-brand-hover sm:h-10 sm:gap-2 sm:px-4 sm:text-sm md:py-3"
+                disabled={atCeiling}
                 onClick={(e) => handleAdd(e)}
               >
                 <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />

@@ -18,17 +18,33 @@ interface Category {
 export default function FavoritesPage() {
   const favoriteIds = useFavoritesStore((s) => s.ids);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [restaurantCategories, setRestaurantCategories] = useState<Category[]>(
+    []
+  );
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/categories")
-      .then((res) => res.json() as Promise<Category[]>)
-      .then(setCategories)
-      .catch(() => setCategories([]))
+    Promise.all([
+      fetch("/api/categories").then((res) => res.json() as Promise<Category[]>),
+      fetch("/api/restaurant/categories").then(
+        (res) => res.json() as Promise<Category[]>
+      ),
+    ])
+      .then(([bakery, restaurant]) => {
+        setCategories(Array.isArray(bakery) ? bakery : []);
+        setRestaurantCategories(Array.isArray(restaurant) ? restaurant : []);
+      })
+      .catch(() => {
+        setCategories([]);
+        setRestaurantCategories([]);
+      })
       .finally(() => setLoading(false));
   }, []);
 
-  const lookup = useMemo(() => buildFavoritesLookup(categories), [categories]);
+  const lookup = useMemo(
+    () => buildFavoritesLookup(categories, restaurantCategories),
+    [categories, restaurantCategories]
+  );
 
   const products = useMemo(() => {
     return favoriteIds

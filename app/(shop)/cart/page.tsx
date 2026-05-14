@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ShoppingBag, Minus, Plus, Trash2, Sparkles } from "lucide-react";
 import { useCartStore } from "@/store/cartStore";
 import { formatPrice } from "@/lib/utils";
+import { remainingAfterCart, isAtStockCeiling } from "@/lib/cart-stock";
 import { Button } from "@/components/ui/button";
 import { DeliveryToggle } from "@/components/shop/DeliveryToggle";
 import { CartBonusSummary } from "@/components/shop/CartBonusSummary";
@@ -71,7 +72,16 @@ export default function CartPage() {
 
       <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-12 xl:grid-cols-[minmax(0,1fr)_380px]">
         <div className="space-y-4">
-          {items.map((item) => (
+          {items.map((item) => {
+            const remaining = remainingAfterCart(
+              item.stockQuantity,
+              item.quantity
+            );
+            const atCeiling = isAtStockCeiling(
+              item.stockQuantity,
+              item.quantity
+            );
+            return (
             <article
               key={item.productId}
               className="group flex gap-4 rounded-[24px] border border-border/60 bg-surface-1 p-4 shadow-card transition-shadow duration-300 hover:border-border hover:shadow-card-hover md:p-5"
@@ -96,6 +106,19 @@ export default function CartPage() {
                       {formatPrice(item.price)}{" "}
                       <span className="text-text-3">· за шт.</span>
                     </p>
+                    {remaining !== null ? (
+                      <p
+                        className={
+                          remaining === 0
+                            ? "text-[12px] font-medium text-error"
+                            : "text-[12px] text-text-3"
+                        }
+                      >
+                        {remaining === 0
+                          ? "Нет в наличии"
+                          : `Осталось: ${remaining}`}
+                      </p>
+                    ) : null}
                   </div>
                   <Button
                     type="button"
@@ -132,6 +155,7 @@ export default function CartPage() {
                       size="icon"
                       className="h-9 w-9 rounded-full"
                       aria-label="Больше"
+                      disabled={atCeiling}
                       onClick={() =>
                         updateQuantity(item.productId, item.quantity + 1)
                       }
@@ -145,7 +169,8 @@ export default function CartPage() {
                 </div>
               </div>
             </article>
-          ))}
+            );
+          })}
 
           <Button
             type="button"

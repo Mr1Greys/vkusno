@@ -4,6 +4,8 @@ export interface Category {
   slug: string;
   sortOrder: number;
   isActive: boolean;
+  description?: string | null;
+  catalog?: "BAKERY" | "RESTAURANT";
 }
 
 export interface Product {
@@ -17,6 +19,8 @@ export interface Product {
   isHalal: boolean;
   sortOrder: number;
   categoryId: string;
+  /** null — остаток не ограничиваем */
+  stockQuantity?: number | null;
 }
 
 export interface CartItem {
@@ -26,6 +30,8 @@ export interface CartItem {
   price: number;
   quantity: number;
   imageUrl?: string | null;
+  /** null — без лимита по складу */
+  stockQuantity?: number | null;
 }
 
 export interface OrderItem {

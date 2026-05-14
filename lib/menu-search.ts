@@ -1,5 +1,12 @@
 import type { Product } from "@/types";
-import type { RestaurantCategory } from "@/data/restaurant-menu";
+
+export type RestaurantMenuCategoryLike = {
+  id: string;
+  name: string;
+  description?: string;
+  slug: string;
+  products: { id: string; name: string }[];
+};
 
 export type BakeryCategory = {
   id: string;
@@ -27,9 +34,9 @@ export function filterBakeryCategories(
 }
 
 export function filterRestaurantCategories(
-  menu: RestaurantCategory[],
+  menu: RestaurantMenuCategoryLike[],
   query: string
-): RestaurantCategory[] {
+): RestaurantMenuCategoryLike[] {
   const q = query.trim().toLowerCase();
   if (!q) return menu;
   return menu

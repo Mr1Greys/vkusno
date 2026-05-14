@@ -1,9 +1,10 @@
 "use client";
 
-import { Plus, Minus, Trash2 } from "lucide-react";
+import { Plus, Minus } from "lucide-react";
 import { CartItem as CartItemType } from "@/store/cartStore";
 import { useCartStore } from "@/store/cartStore";
 import { formatPrice } from "@/lib/utils";
+import { remainingAfterCart, isAtStockCeiling } from "@/lib/cart-stock";
 import { Button } from "@/components/ui/button";
 import { ProductCardImage } from "@/components/shop/ProductCardImage";
 
@@ -12,7 +13,9 @@ interface CartItemProps {
 }
 
 export function CartItem({ item }: CartItemProps) {
-  const { updateQuantity, removeItem } = useCartStore();
+  const { updateQuantity } = useCartStore();
+  const remaining = remainingAfterCart(item.stockQuantity, item.quantity);
+  const atCeiling = isAtStockCeiling(item.stockQuantity, item.quantity);
 
   return (
     <div className="flex gap-3 py-3 border-b border-border">
@@ -29,6 +32,17 @@ export function CartItem({ item }: CartItemProps) {
       <div className="flex-1 min-w-0">
         <h4 className="font-medium text-sm truncate">{item.name}</h4>
         <p className="text-text-2 text-sm">{formatPrice(item.price)}</p>
+        {remaining !== null ? (
+          <p
+            className={
+              remaining === 0
+                ? "mt-0.5 text-xs font-medium text-error"
+                : "mt-0.5 text-xs text-text-3"
+            }
+          >
+            {remaining === 0 ? "Нет в наличии" : `Осталось: ${remaining}`}
+          </p>
+        ) : null}
 
         <div className="flex items-center justify-between mt-2">
           <div className="flex items-center gap-1 bg-surface-2 rounded-full">
@@ -45,6 +59,7 @@ export function CartItem({ item }: CartItemProps) {
               size="icon"
               variant="ghost"
               className="h-7 w-7 rounded-full"
+              disabled={atCeiling}
               onClick={() => updateQuantity(item.productId, item.quantity + 1)}
             >
               <Plus className="h-3 w-3" />

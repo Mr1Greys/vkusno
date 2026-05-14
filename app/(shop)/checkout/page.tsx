@@ -11,6 +11,7 @@ import { useCartStore } from "@/store/cartStore";
 import { useDeliveryStore } from "@/store/deliveryStore";
 import { useAuthStore } from "@/store/authStore";
 import { cn, formatPrice } from "@/lib/utils";
+import { remainingAfterCart } from "@/lib/cart-stock";
 import { maxBonusSpendForSubtotal } from "@/lib/shop-settings";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -309,7 +310,12 @@ export default function CheckoutPage() {
                 Ваш заказ
               </h3>
               <ul className="space-y-4">
-                {items.map((item) => (
+                {items.map((item) => {
+                  const remaining = remainingAfterCart(
+                    item.stockQuantity,
+                    item.quantity
+                  );
+                  return (
                   <li
                     key={item.productId}
                     className="flex gap-3 border-b border-border/40 pb-4 last:border-0 last:pb-0"
@@ -330,12 +336,27 @@ export default function CheckoutPage() {
                       <p className="mt-1 text-[13px] text-text-2">
                         {formatPrice(item.price)} · {item.quantity} шт.
                       </p>
+                      {remaining !== null ? (
+                        <p
+                          className={cn(
+                            "mt-0.5 text-[12px]",
+                            remaining === 0
+                              ? "font-medium text-error"
+                              : "text-text-3"
+                          )}
+                        >
+                          {remaining === 0
+                            ? "Нет в наличии"
+                            : `Осталось: ${remaining}`}
+                        </p>
+                      ) : null}
                     </div>
                     <p className="shrink-0 text-[15px] font-bold tabular-nums text-text">
                       {formatPrice(item.price * item.quantity)}
                     </p>
                   </li>
-                ))}
+                  );
+                })}
               </ul>
             </div>
 

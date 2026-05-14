@@ -6,7 +6,9 @@
     "node": ">=18.17.0"
   },
   "scripts": {
+    "predev": "prisma generate",
     "dev": "next dev -p 3001",
+    "dev:fresh": "bash scripts/dev-3001.sh",
     "build": "prisma migrate deploy && next build",
     "start": "next start",
     "lint": "next lint",
@@ -15,6 +17,9 @@
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.4.2",
@@ -29,6 +34,7 @@
     "@radix-ui/react-switch": "^1.0.3",
     "@radix-ui/react-tabs": "^1.0.4",
     "@radix-ui/react-toast": "^1.1.5",
+    "@zxing/browser": "^0.2.0",
     "bcryptjs": "^2.4.3",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
@@ -41,6 +47,7 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-hook-form": "^7.51.4",
+    "react-qr-code": "^2.0.21",
     "tailwind-merge": "^2.3.0",
     "zod": "^3.23.8",
     "zustand": "^4.5.2"

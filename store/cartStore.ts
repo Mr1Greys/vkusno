@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { maxSelectableQuantity } from "@/lib/cart-stock";
 
 export interface CartItem {
   id: string;
@@ -8,6 +9,8 @@ export interface CartItem {
   price: number;
   quantity: number;
   imageUrl?: string | null;
+  /** null — без лимита по складу */
+  stockQuantity?: number | null;
 }
 
 interface CartState {
@@ -38,17 +41,26 @@ export const useCartStore = create<CartState>()(
       closeCart: () => set({ isOpen: false }),
       addItem: (item) => {
         set((state) => {
+          const cap = maxSelectableQuantity(item.stockQuantity);
           const existing = state.items.find((i) => i.productId === item.productId);
           if (existing) {
+            const stock = item.stockQuantity ?? existing.stockQuantity;
+            const maxQ = maxSelectableQuantity(stock);
             return {
               items: state.items.map((i) =>
                 i.productId === item.productId
-                  ? { ...i, quantity: i.quantity + 1 }
+                  ? {
+                      ...i,
+                      stockQuantity: stock,
+                      quantity: Math.min(maxQ, i.quantity + 1),
+                    }
                   : i
               ),
             };
           }
-          return { items: [...state.items, { ...item, quantity: 1 }] };
+          return {
+            items: [...state.items, { ...item, quantity: Math.min(cap, 1) }],
+          };
         });
       },
       removeItem: (productId) => {
@@ -62,9 +74,11 @@ export const useCartStore = create<CartState>()(
           return;
         }
         set((state) => ({
-          items: state.items.map((i) =>
-            i.productId === productId ? { ...i, quantity } : i
-          ),
+          items: state.items.map((i) => {
+            if (i.productId !== productId) return i;
+            const maxQ = maxSelectableQuantity(i.stockQuantity);
+            return { ...i, quantity: Math.min(maxQ, quantity) };
+          }),
         }));
       },
       clearCart: () => set({ items: [], bonusToUse: 0 }),

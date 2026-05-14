@@ -5,9 +5,10 @@ import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 const boxClass = {
-  hero: "h-[4.25rem] w-[4.25rem] sm:h-[5.25rem] sm:w-[5.25rem] md:h-[6.5rem] md:w-[6.5rem]",
+  /** Единый размер лого во всех шапках (главная и внутренние страницы). */
+  hero: "h-[5rem] w-[5rem] sm:h-[5.5rem] sm:w-[5.5rem] md:h-[6.5rem] md:w-[6.5rem]",
   header:
-    "h-[3.75rem] w-[3.75rem] sm:h-[4.75rem] sm:w-[4.75rem] md:h-[6rem] md:w-[6rem]",
+    "h-[5rem] w-[5rem] sm:h-[5.5rem] sm:w-[5.5rem] md:h-[6.5rem] md:w-[6.5rem]",
   /** Баннеры, PWA-подсказка — без ссылки на главную */
   prompt: "h-11 w-11 shrink-0 rounded-[14px]",
 };
@@ -20,8 +21,9 @@ type BrandLogoProps = {
 };
 
 /**
- * Фон PNG часто белый — смешиваем с кремовым подложкой, чтобы не было «квадрата».
- * `mix-blend-darken`: белые пиксели визуально совпадают с bg-cream.
+ * Подложка под PNG: тот же cream, что и у шапки/страницы (#FAF8F5).
+ * Смешивание убирает «холодный» белый фон у растрового лого; лёгкий sepia
+ * подтягивает остаточный серый к тёплому кремовому.
  */
 export function BrandLogo({
   variant = "hero",
@@ -46,11 +48,9 @@ export function BrandLogo({
         sizes={
           isPrompt
             ? "44px"
-            : variant === "hero"
-              ? "(max-width: 768px) 5rem, 7rem"
-              : "(max-width: 768px) 4rem, 6rem"
+            : "(max-width: 768px) 5rem, (max-width: 1024px) 5.5rem, 6.5rem"
         }
-        className="object-contain object-center mix-blend-darken"
+        className="object-contain object-center mix-blend-darken [filter:sepia(0.04)_saturate(1.06)]"
         unoptimized
         priority={!isPrompt}
         onError={(e) => {

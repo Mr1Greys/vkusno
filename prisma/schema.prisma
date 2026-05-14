@@ -16,7 +16,8 @@ model User {
   role         Role     @default(CUSTOMER)
   bonusPoints  Int      @default(0)
   orders       Order[]
-  bonusHistory BonusHistory[]
+  bonusHistory BonusHistory[] @relation("BonusHistoryUser")
+  bonusHistoryCreated BonusHistory[] @relation("BonusHistoryCreatedBy")
   createdAt    DateTime @default(now())
 }
 
@@ -25,12 +26,19 @@ enum Role {
   ADMIN
 }
 
+enum Catalog {
+  BAKERY
+  RESTAURANT
+}
+
 model Category {
   id          String    @id @default(cuid())
   name        String
   slug        String    @unique
   sortOrder   Int       @default(0)
   isActive    Boolean   @default(true)
+  description String?
+  catalog     Catalog   @default(BAKERY)
   products    Product[]
 }
 
@@ -44,6 +52,7 @@ model Product {
   isAvailable   Boolean   @default(true)
   isHalal       Boolean   @default(false)
   sortOrder     Int       @default(0)
+  stockQuantity Int?
   categoryId    String
   category      Category  @relation(fields: [categoryId], references: [id])
   orderItems    OrderItem[]
@@ -71,6 +80,7 @@ model Order {
   paymentTypeId   String?
   paymentTypeName String?
   items           OrderItem[]
+  bonusHistory    BonusHistory[]
   iikoOrderId     String?
   iikoOrderStatus String?
   iikoPushedAt    DateTime?
@@ -104,14 +114,17 @@ model OrderItem {
 }
 
 model BonusHistory {
-  id          String     @id @default(cuid())
-  userId      String
-  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  type        BonusType
-  amount      Int
-  description String?
-  orderId     String?
-  createdAt   DateTime   @default(now())
+  id                String     @id @default(cuid())
+  userId            String
+  user              User       @relation("BonusHistoryUser", fields: [userId], references: [id], onDelete: Cascade)
+  type              BonusType
+  amount            Int
+  description       String?
+  orderId           String?
+  order             Order?     @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  createdByUserId   String?
+  createdBy         User?      @relation("BonusHistoryCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  createdAt         DateTime   @default(now())
 }
 
 enum BonusType {

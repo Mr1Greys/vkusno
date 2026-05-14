@@ -10,8 +10,8 @@ export interface RestaurantProduct {
   id: string;
   name: string;
   price: number;
-  weight?: string;
-  imageUrl?: string;
+  weight?: string | null;
+  imageUrl?: string | null;
   isHalal?: boolean;
 }
 
@@ -68,6 +68,25 @@ export const restaurantMenu: RestaurantCategory[] = [
       { id: "beef-stroganoff", name: "Бефстроганов", price: 0 },
       { id: "home-style-roast", name: "Жаркое из вырезки по домашнему", price: 0 },
       { id: "kara-chaevsky-burger", name: "Бургер карачаевский", price: 0 },
+    ],
+  },
+  {
+    id: "mangal",
+    name: "Мангал",
+    description: "Блюда на углях: мясо, рыба, овощи и классика карачаевской кухни.",
+    slug: "mangal",
+    products: [
+      { id: "mangal-set", name: "Мангал", price: 0 },
+      { id: "mangal-zhau-bauur", name: "Жау бауур", price: 0 },
+      { id: "mangal-yazyki", name: "Язычки", price: 0 },
+      { id: "mangal-koreyka", name: "Корейка", price: 0 },
+      { id: "mangal-myakot-baranina", name: "Мякоть баранина", price: 0 },
+      { id: "mangal-kurinoe-file", name: "Куриное филе", price: 0 },
+      { id: "mangal-kurinye-krylya", name: "Куриные крылья", price: 0 },
+      { id: "mangal-lyulya-baranina", name: "Люля баранина", price: 0 },
+      { id: "mangal-ovoshchi", name: "Овощи", price: 0, isHalal: true },
+      { id: "mangal-dorado-gril", name: "Дорадо на гриле", price: 0 },
+      { id: "mangal-griby", name: "Грибы", price: 0, isHalal: true },
     ],
   },
 ];

@@ -18,3 +18,12 @@ export function getJwtSecretBytes(): Uint8Array {
   }
   return new TextEncoder().encode(DEV_PLACEHOLDER);
 }
+
+/** Отдельный секрет для QR лояльности; иначе тот же, что и JWT (достаточно ≥32 символов). */
+export function getLoyaltyQrSecretBytes(): Uint8Array {
+  const s = process.env.LOYALTY_QR_SECRET?.trim();
+  if (s && s.length >= 32) {
+    return new TextEncoder().encode(s);
+  }
+  return getJwtSecretBytes();
+}

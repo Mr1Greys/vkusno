@@ -116,10 +116,7 @@ export function LandingHeroBar() {
         {/* Мобильная: строка 1 — лого | точка самовывоза; строка 2 — переключатель + действия */}
         <div className="flex flex-col gap-3 md:hidden">
           <div className="flex min-w-0 items-center gap-2.5">
-            <BrandLogo
-              variant="hero"
-              className="shrink-0 origin-left max-md:scale-[1.06] md:scale-100"
-            />
+            <BrandLogo variant="hero" className="shrink-0" />
             <div className="min-w-0 flex-1">
               <PickupSpotLink className="w-full max-w-none justify-between gap-2 rounded-2xl px-2 py-2" />
             </div>

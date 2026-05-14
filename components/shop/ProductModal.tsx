@@ -4,6 +4,7 @@ import { Plus, Minus } from "lucide-react";
 import { Product } from "@/types";
 import { useCartStore } from "@/store/cartStore";
 import { formatPrice, cn } from "@/lib/utils";
+import { remainingAfterCart, isAtStockCeiling } from "@/lib/cart-stock";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,14 +28,20 @@ export function ProductModal({ product, open, onOpenChange }: ProductModalProps)
 
   const cartItem = items.find((i) => i.productId === product.id);
   const quantity = cartItem?.quantity || 0;
+  const stockTracked = product.stockQuantity != null;
+  const remaining = remainingAfterCart(product.stockQuantity, quantity);
+  const noneLeft = stockTracked && remaining === 0;
+  const atCeiling = isAtStockCeiling(product.stockQuantity, quantity);
 
   const handleAdd = () => {
+    if (atCeiling) return;
     addItem({
       id: product.id,
       productId: product.id,
       name: product.name,
       price: product.price,
       imageUrl: product.imageUrl,
+      stockQuantity: product.stockQuantity,
     });
   };
 
@@ -63,6 +70,11 @@ export function ProductModal({ product, open, onOpenChange }: ProductModalProps)
         <div className="flex items-center gap-2">
           {product.weight && <span className="text-text-3">Вес: {product.weight}</span>}
           {product.isHalal && <Badge variant="halal">Халяль</Badge>}
+          {stockTracked && remaining !== null ? (
+            <span className={cn("text-sm", noneLeft ? "text-error" : "text-text-2")}>
+              {noneLeft ? "Нет в наличии" : `Осталось: ${remaining}`}
+            </span>
+          ) : null}
         </div>
 
         <div className="flex items-center justify-between pt-4 border-t border-border">
@@ -85,14 +97,15 @@ export function ProductModal({ product, open, onOpenChange }: ProductModalProps)
                 size="icon"
                 variant="ghost"
                 className="h-10 w-10 rounded-full"
+                disabled={atCeiling}
                 onClick={handleAdd}
               >
                 <Plus className="h-5 w-5" />
               </Button>
             </div>
           ) : (
-            <Button onClick={handleAdd} size="lg">
-              <Plus className="h-5 w-5 mr-2" />
+            <Button onClick={handleAdd} size="lg" disabled={atCeiling}>
+              <Plus className="mr-2 h-5 w-5" />
               В корзину
             </Button>
           )}

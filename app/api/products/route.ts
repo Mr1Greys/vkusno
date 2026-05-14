@@ -13,7 +13,10 @@ export async function GET(request: Request) {
   const products = await prisma.product.findMany({
     where: {
       isAvailable: true,
-      ...(category && { category: { slug: category } }),
+      category: {
+        catalog: "BAKERY",
+        ...(category && { slug: category }),
+      },
       ...(q && {
         OR: [
           { name: { contains: q, mode: "insensitive" } },

@@ -33,6 +33,10 @@ const withPWA = require('next-pwa')({
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  experimental: {
+    /** Иначе Webpack может закешировать старый @prisma/client без новых полей схемы. */
+    serverComponentsExternalPackages: ["@prisma/client", "prisma"],
+  },
   images: {
     remotePatterns: [
       {

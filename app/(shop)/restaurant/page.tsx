@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { UtensilsCrossed } from "lucide-react";
-import { restaurantMenu } from "@/data/restaurant-menu";
+import type { RestaurantCategory } from "@/data/restaurant-menu";
 import { RestaurantProductCard } from "@/components/shop/RestaurantProductCard";
 import { ShopPageHero } from "@/components/shop/ShopPageHero";
 import { CategoryNav } from "@/components/layout/CategoryNav";
@@ -11,10 +11,36 @@ import { RESTAURANT_MENU_PROMO_BANNER } from "@/lib/promo";
 
 export default function RestaurantPage() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [menu, setMenu] = useState<RestaurantCategory[]>([]);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/restaurant/categories")
+      .then((res) => {
+        if (!res.ok) throw new Error(String(res.status));
+        return res.json() as Promise<RestaurantCategory[]>;
+      })
+      .then((data) => {
+        if (!cancelled) {
+          setMenu(Array.isArray(data) ? data : []);
+          setLoadError(null);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setMenu([]);
+          setLoadError("Не удалось загрузить меню. Попробуйте обновить страницу.");
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const filteredMenu = useMemo(
-    () => filterRestaurantCategories(restaurantMenu, searchQuery),
-    [searchQuery]
+    () => filterRestaurantCategories(menu, searchQuery) as RestaurantCategory[],
+    [menu, searchQuery]
   );
 
   const navCategories = useMemo(
@@ -37,7 +63,7 @@ export default function RestaurantPage() {
         titleIcon={<UtensilsCrossed className="h-5 w-5" aria-hidden />}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
-        searchPlaceholder="Поиск: салаты, супы, горячее…"
+        searchPlaceholder="Поиск: салаты, супы, горячее, мангал…"
         promoLayout="full"
         promoImageSrc={RESTAURANT_MENU_PROMO_BANNER}
         promoImageAlt="Акции и специальные предложения"
@@ -46,6 +72,22 @@ export default function RestaurantPage() {
       <CategoryNav categories={navCategories} />
 
       <div className="container mx-auto max-w-6xl space-y-14 px-4 pb-16">
+        {loadError && (
+          <p className="rounded-[24px] border border-border/60 bg-surface-1 px-6 py-8 text-center text-[15px] leading-relaxed text-text-2 shadow-card">
+            {loadError}
+          </p>
+        )}
+
+        {!loadError && menu.length === 0 && (
+          <p className="rounded-[24px] border border-border/60 bg-surface-1 px-6 py-8 text-center text-[15px] leading-relaxed text-text-2 shadow-card">
+            Пока нет позиций в меню ресторана. Если вы администратор, выполните{" "}
+            <code className="rounded bg-surface-2 px-1.5 py-0.5 text-sm">
+              npx prisma db seed
+            </code>{" "}
+            после миграций.
+          </p>
+        )}
+
         {isEmptySearch && (
           <p className="rounded-[24px] border border-border/60 bg-surface-1 px-6 py-8 text-center text-[15px] leading-relaxed text-text-2 shadow-card">
             По запросу «{searchQuery.trim()}» ничего не нашлось. Попробуйте
@@ -80,7 +122,6 @@ export default function RestaurantPage() {
           </section>
         ))}
       </div>
-
     </div>
   );
 }

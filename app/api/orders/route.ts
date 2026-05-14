@@ -81,6 +81,12 @@ export async function POST(request: Request) {
           { status: 400 }
         );
       }
+      if (p.stockQuantity != null && p.stockQuantity < qty) {
+        return NextResponse.json(
+          { error: `Недостаточно «${p.name}» на складе` },
+          { status: 400 }
+        );
+      }
       const lineTotal = p.price * qty;
       subtotal += lineTotal;
       resolvedLines.push({
@@ -146,6 +152,22 @@ export async function POST(request: Request) {
     const orderNumber = generateOrderNumber();
 
     const order = await prisma.$transaction(async (tx) => {
+      for (const line of resolvedLines) {
+        const p = productById.get(line.productId);
+        if (p && p.stockQuantity != null) {
+          const stockUpd = await tx.product.updateMany({
+            where: {
+              id: line.productId,
+              stockQuantity: { gte: line.quantity },
+            },
+            data: { stockQuantity: { decrement: line.quantity } },
+          });
+          if (stockUpd.count !== 1) {
+            throw new Error("INSUFFICIENT_STOCK");
+          }
+        }
+      }
+
       if (session?.id && bonusUsed > 0) {
         const fresh = await tx.user.findUnique({
           where: { id: session.id },
@@ -222,6 +244,12 @@ export async function POST(request: Request) {
     if (error instanceof Error && error.message === "INSUFFICIENT_BONUS") {
       return NextResponse.json(
         { error: "Недостаточно бонусов" },
+        { status: 400 }
+      );
+    }
+    if (error instanceof Error && error.message === "INSUFFICIENT_STOCK") {
+      return NextResponse.json(
+        { error: "Изменилось наличие товара, обновите корзину" },
         { status: 400 }
       );
     }
