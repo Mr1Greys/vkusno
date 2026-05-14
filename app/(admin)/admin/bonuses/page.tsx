@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -11,6 +12,7 @@ import {
   Loader2,
   AlertCircle,
   ScanLine,
+  X,
 } from "lucide-react";
 import { BonusQrScanner } from "@/components/admin/BonusQrScanner";
 import { Button } from "@/components/ui/button";
@@ -53,6 +55,7 @@ function AdminBonusesInner() {
   const urlOrderId = urlParams.get("orderId")?.trim() ?? "";
 
   const [scannerModalOpen, setScannerModalOpen] = useState(false);
+  const [scannerPortalMounted, setScannerPortalMounted] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserPreview | null>(null);
   const [scanMessage, setScanMessage] = useState("");
   const [phoneLookup, setPhoneLookup] = useState("");
@@ -104,6 +107,10 @@ function AdminBonusesInner() {
     }
   }, [urlParams]);
 
+  useEffect(() => {
+    setScannerPortalMounted(true);
+  }, []);
+
   const loadHistory = useCallback(async () => {
     const res = await fetch(`/api/admin/bonus-history?${historyQuery}`);
     if (!res.ok) return;
@@ -124,6 +131,20 @@ function AdminBonusesInner() {
       setQrVerify((prev) => (prev === "verifying" ? "idle" : prev));
     }
     prevScannerModalOpen.current = scannerModalOpen;
+  }, [scannerModalOpen]);
+
+  useEffect(() => {
+    if (!scannerModalOpen) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setScannerModalOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener("keydown", onKey);
+    };
   }, [scannerModalOpen]);
 
   const onQrDecoded = async (token: string) => {
@@ -315,119 +336,145 @@ function AdminBonusesInner() {
         </section>
       </div>
 
-      <Dialog open={scannerModalOpen} onOpenChange={setScannerModalOpen}>
-        <DialogContent
-          className={cn(
-            "w-full gap-0 overflow-hidden border-border/90 p-0 sm:max-w-[min(100vw-1.5rem,440px)]",
-            "max-sm:fixed max-sm:inset-x-0 max-sm:bottom-0 max-sm:top-auto max-sm:max-h-[min(92dvh,680px)] max-sm:translate-x-0 max-sm:translate-y-0 max-sm:rounded-b-none max-sm:rounded-t-[1.75rem] max-sm:border-x-0 max-sm:border-b-0"
-          )}
-        >
-          <div className="border-b border-border/60 bg-surface-1 px-5 pb-4 pt-6 pr-12">
-            <DialogHeader className="space-y-2 text-left">
-              <DialogTitle className="font-display text-lg sm:text-xl">
-                Сканер QR
-              </DialogTitle>
-            </DialogHeader>
-            <p className="mt-3 text-sm leading-relaxed text-text-2">
-              Наведите камеру на QR из раздела «Бонусы» в профиле клиента в нашем приложении — это
-              не платёжный QR банка. Если код не читается, проверьте яркость экрана и расстояние
-              15–25 см.
-            </p>
-          </div>
-          <div className="border-b border-border/40 bg-surface-2/35 px-4 py-5 sm:px-5">
-            <BonusQrScanner
-              active={cameraScanActive}
-              onDecoded={onQrDecoded}
-              onCameraState={setCameraState}
-              className="max-w-full sm:max-w-md"
-            />
-          </div>
-          <div className="space-y-2 rounded-b-lg bg-[#efe8df]/95 px-4 py-4 sm:px-5">
-            <div className="flex flex-wrap items-center gap-2">
-              <span
+      {scannerPortalMounted && scannerModalOpen
+        ? createPortal(
+            <>
+              <button
+                type="button"
+                className="fixed inset-0 z-[200] cursor-default bg-black/45 backdrop-blur-sm"
+                aria-label="Закрыть сканер"
+                onClick={() => setScannerModalOpen(false)}
+              />
+              <div
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="admin-bonus-scanner-title"
                 className={cn(
-                  "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide",
-                  cameraState === "live" &&
-                    "border-emerald-500/35 bg-emerald-500/10 text-emerald-800",
-                  cameraState === "starting" &&
-                    "border-amber-500/35 bg-amber-500/10 text-amber-900",
-                  cameraState === "error" &&
-                    "border-destructive/35 bg-destructive/10 text-destructive",
-                  cameraState === "idle" &&
-                    "border-border bg-surface-1 text-text-2"
+                  "fixed z-[201] flex max-h-[90vh] w-full flex-col overflow-y-auto overflow-x-hidden border-border bg-surface-1 shadow-2xl outline-none",
+                  "inset-x-0 bottom-0 rounded-t-[1.75rem] border-t border-x-0 border-b-0 pb-[env(safe-area-inset-bottom,0px)]",
+                  "sm:inset-auto sm:left-1/2 sm:top-1/2 sm:max-h-[min(90vh,680px)] sm:w-[min(100vw-2rem,440px)] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-2xl sm:border sm:pb-0"
                 )}
               >
-                {cameraState === "starting" ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
-                ) : null}
-                {cameraState === "live" ? (
-                  <span
-                    className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_0_3px_rgba(34,197,94,0.25)]"
-                    aria-hidden
+                <button
+                  type="button"
+                  className="absolute right-3 top-3 z-10 rounded-full p-2 text-text-2 transition-colors hover:bg-surface-2 hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
+                  onClick={() => setScannerModalOpen(false)}
+                  aria-label="Закрыть"
+                >
+                  <X className="h-5 w-5" aria-hidden />
+                </button>
+                <div className="border-b border-border/60 bg-surface-1 px-5 pb-4 pt-6 pr-14">
+                  <div className="space-y-2 text-left">
+                    <h2
+                      id="admin-bonus-scanner-title"
+                      className="font-display text-lg font-semibold leading-tight tracking-tight text-text sm:text-xl"
+                    >
+                      Сканер QR
+                    </h2>
+                  </div>
+                  <p className="mt-3 text-sm leading-relaxed text-text-2">
+                    Наведите камеру на QR из раздела «Бонусы» в профиле клиента в нашем приложении —
+                    это не платёжный QR банка. Если код не читается, проверьте яркость экрана и расстояние
+                    15–25 см.
+                  </p>
+                </div>
+                <div className="border-b border-border/40 bg-surface-2/35 px-4 py-5 sm:px-5">
+                  <BonusQrScanner
+                    active={cameraScanActive}
+                    onDecoded={onQrDecoded}
+                    onCameraState={setCameraState}
+                    className="max-w-full sm:max-w-md"
                   />
-                ) : null}
-                {cameraState === "error" ? (
-                  <AlertCircle className="h-3.5 w-3.5" aria-hidden />
-                ) : null}
-                {cameraState === "idle" && cameraScanActive
-                  ? "Ожидание камеры…"
-                  : cameraState === "idle"
-                    ? "Камера выключена"
-                    : cameraState === "starting"
-                      ? "Запуск…"
-                      : cameraState === "live"
-                        ? "Сканирование"
-                        : "Ошибка камеры"}
-              </span>
-              <span
-                className={cn(
-                  "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide",
-                  qrVerify === "verifying" &&
-                    "border-brand/30 bg-brand/5 text-brand",
-                  qrVerify === "found" &&
-                    "border-emerald-500/35 bg-emerald-500/10 text-emerald-800",
-                  qrVerify === "error" &&
-                    "border-destructive/35 bg-destructive/10 text-destructive",
-                  qrVerify === "idle" && "border-border bg-surface-1 text-text-2"
-                )}
-              >
-                {qrVerify === "verifying" ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
-                ) : null}
-                {qrVerify === "found" ? (
-                  <CheckCircle2 className="h-3.5 w-3.5" aria-hidden />
-                ) : null}
-                {qrVerify === "error" ? (
-                  <AlertCircle className="h-3.5 w-3.5" aria-hidden />
-                ) : null}
-                {qrVerify === "idle"
-                  ? "Код"
-                  : qrVerify === "verifying"
-                    ? "Проверка…"
-                    : qrVerify === "found"
-                      ? "Клиент найден"
-                      : "Ошибка кода"}
-              </span>
-            </div>
-            {scanMessage ? (
-              <p
-                className={cn(
-                  "text-sm",
-                  qrVerify === "error" ? "text-destructive" : "text-text-2"
-                )}
-              >
-                {scanMessage}
-              </p>
-            ) : null}
-            {qrVerify === "found" && selectedUser ? (
-              <p className="text-sm text-emerald-800">
-                Клиент выбран — открыто окно операции. После закрытия нажмите кнопку сканера для
-                следующего гостя.
-              </p>
-            ) : null}
-          </div>
-        </DialogContent>
-      </Dialog>
+                </div>
+                <div className="space-y-2 rounded-b-lg bg-[#efe8df]/95 px-4 py-4 sm:px-5">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span
+                      className={cn(
+                        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide",
+                        cameraState === "live" &&
+                          "border-emerald-500/35 bg-emerald-500/10 text-emerald-800",
+                        cameraState === "starting" &&
+                          "border-amber-500/35 bg-amber-500/10 text-amber-900",
+                        cameraState === "error" &&
+                          "border-destructive/35 bg-destructive/10 text-destructive",
+                        cameraState === "idle" &&
+                          "border-border bg-surface-1 text-text-2"
+                      )}
+                    >
+                      {cameraState === "starting" ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
+                      ) : null}
+                      {cameraState === "live" ? (
+                        <span
+                          className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_0_3px_rgba(34,197,94,0.25)]"
+                          aria-hidden
+                        />
+                      ) : null}
+                      {cameraState === "error" ? (
+                        <AlertCircle className="h-3.5 w-3.5" aria-hidden />
+                      ) : null}
+                      {cameraState === "idle" && cameraScanActive
+                        ? "Ожидание камеры…"
+                        : cameraState === "idle"
+                          ? "Камера выключена"
+                          : cameraState === "starting"
+                            ? "Запуск…"
+                            : cameraState === "live"
+                              ? "Сканирование"
+                              : "Ошибка камеры"}
+                    </span>
+                    <span
+                      className={cn(
+                        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide",
+                        qrVerify === "verifying" &&
+                          "border-brand/30 bg-brand/5 text-brand",
+                        qrVerify === "found" &&
+                          "border-emerald-500/35 bg-emerald-500/10 text-emerald-800",
+                        qrVerify === "error" &&
+                          "border-destructive/35 bg-destructive/10 text-destructive",
+                        qrVerify === "idle" && "border-border bg-surface-1 text-text-2"
+                      )}
+                    >
+                      {qrVerify === "verifying" ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
+                      ) : null}
+                      {qrVerify === "found" ? (
+                        <CheckCircle2 className="h-3.5 w-3.5" aria-hidden />
+                      ) : null}
+                      {qrVerify === "error" ? (
+                        <AlertCircle className="h-3.5 w-3.5" aria-hidden />
+                      ) : null}
+                      {qrVerify === "idle"
+                        ? "Код"
+                        : qrVerify === "verifying"
+                          ? "Проверка…"
+                          : qrVerify === "found"
+                            ? "Клиент найден"
+                            : "Ошибка кода"}
+                    </span>
+                  </div>
+                  {scanMessage ? (
+                    <p
+                      className={cn(
+                        "text-sm",
+                        qrVerify === "error" ? "text-destructive" : "text-text-2"
+                      )}
+                    >
+                      {scanMessage}
+                    </p>
+                  ) : null}
+                  {qrVerify === "found" && selectedUser ? (
+                    <p className="text-sm text-emerald-800">
+                      Клиент выбран — открыто окно операции. После закрытия нажмите кнопку сканера для
+                      следующего гостя.
+                    </p>
+                  ) : null}
+                </div>
+              </div>
+            </>,
+            document.body
+          )
+        : null}
 
       <Dialog open={bonusModalOpen} onOpenChange={onBonusModalOpenChange}>
         <DialogContent className="max-h-[min(90vh,640px)] w-[min(100vw-1.5rem,26rem)] gap-4 overflow-y-auto p-5 sm:p-6">
