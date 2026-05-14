@@ -55,10 +55,13 @@ export interface Order {
   bonusEarned: number;
   comment: string | null;
   paymentMethod: string | null;
+  paymentTypeName: string | null;
   guestName: string | null;
   guestPhone: string | null;
   items: OrderItem[];
-  createdAt: Date;
+  /** ISO string from API */
+  createdAt: string;
+  updatedAt?: string;
   user?: {
     name: string | null;
     phone: string;

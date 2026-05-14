@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Gift, Search, Camera, CheckCircle2, Loader2, AlertCircle } from "lucide-react";
 import { BonusQrScanner } from "@/components/admin/BonusQrScanner";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import { bonusTypeLabel } from "@/lib/bonus-type-labels";
 
 type UserPreview = {
   id: string;
@@ -35,7 +37,13 @@ type HistoryRow = {
   createdBy: { phone: string; name: string | null } | null;
 };
 
-export default function AdminBonusesPage() {
+type SummaryRow = { type: string; _sum: { amount: number | null } };
+
+function AdminBonusesInner() {
+  const router = useRouter();
+  const urlParams = useSearchParams();
+  const urlOrderId = urlParams.get("orderId")?.trim() ?? "";
+
   const [scannerOn, setScannerOn] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserPreview | null>(null);
   const [scanMessage, setScanMessage] = useState("");
@@ -47,6 +55,9 @@ export default function AdminBonusesPage() {
   const [history, setHistory] = useState<HistoryRow[]>([]);
   const [historyTotal, setHistoryTotal] = useState(0);
   const [historyPage, setHistoryPage] = useState(1);
+  const [summaryByType, setSummaryByType] = useState<SummaryRow[]>([]);
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
   const [cameraState, setCameraState] = useState<
     "idle" | "starting" | "live" | "error"
   >("idle");
@@ -70,8 +81,20 @@ export default function AdminBonusesPage() {
     p.set("page", String(historyPage));
     p.set("pageSize", "30");
     if (selectedUser) p.set("userId", selectedUser.id);
+    if (urlOrderId) p.set("orderId", urlOrderId);
+    if (dateFrom && /^\d{4}-\d{2}-\d{2}$/.test(dateFrom)) p.set("dateFrom", dateFrom);
+    if (dateTo && /^\d{4}-\d{2}-\d{2}$/.test(dateTo)) p.set("dateTo", dateTo);
     return p.toString();
-  }, [historyPage, selectedUser]);
+  }, [historyPage, selectedUser, urlOrderId, dateFrom, dateTo]);
+
+  useEffect(() => {
+    const df = urlParams.get("dateFrom")?.trim() ?? "";
+    const dt = urlParams.get("dateTo")?.trim() ?? "";
+    if (df && dt) {
+      setDateFrom(df);
+      setDateTo(dt);
+    }
+  }, [urlParams]);
 
   const loadHistory = useCallback(async () => {
     const res = await fetch(`/api/admin/bonus-history?${historyQuery}`);
@@ -79,6 +102,7 @@ export default function AdminBonusesPage() {
     const data = await res.json();
     setHistory(data.rows ?? []);
     setHistoryTotal(data.total ?? 0);
+    setSummaryByType(data.summaryByType ?? []);
   }, [historyQuery]);
 
   useEffect(() => {
@@ -507,20 +531,111 @@ export default function AdminBonusesPage() {
       <section className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="font-display text-lg font-bold">Журнал</h2>
-          {selectedUser ? (
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => setSelectedUser(null)}
-            >
-              Показать всех
-            </Button>
-          ) : null}
+          <div className="flex flex-wrap gap-2">
+            {selectedUser ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setSelectedUser(null)}
+              >
+                Сбросить клиента
+              </Button>
+            ) : null}
+            {urlOrderId ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => router.push("/admin/bonuses")}
+              >
+                Сбросить заказ
+              </Button>
+            ) : null}
+          </div>
         </div>
+
+        <div className="flex flex-wrap items-end gap-3 rounded-lg border border-border bg-surface-2/40 p-3">
+          <div>
+            <Label htmlFor="bh-from" className="text-xs">
+              С даты
+            </Label>
+            <Input
+              id="bh-from"
+              type="date"
+              className="mt-1 h-9 w-[11rem]"
+              value={dateFrom}
+              onChange={(e) => setDateFrom(e.target.value)}
+            />
+          </div>
+          <div>
+            <Label htmlFor="bh-to" className="text-xs">
+              По дату
+            </Label>
+            <Input
+              id="bh-to"
+              type="date"
+              className="mt-1 h-9 w-[11rem]"
+              value={dateTo}
+              onChange={(e) => setDateTo(e.target.value)}
+            />
+          </div>
+          <Button
+            type="button"
+            size="sm"
+            variant="secondary"
+            onClick={() => {
+              setHistoryPage(1);
+              const p = new URLSearchParams();
+              if (dateFrom) p.set("dateFrom", dateFrom);
+              if (dateTo) p.set("dateTo", dateTo);
+              if (urlOrderId) p.set("orderId", urlOrderId);
+              router.push(`/admin/bonuses?${p.toString()}`);
+            }}
+          >
+            Применить даты
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              setDateFrom("");
+              setDateTo("");
+              setHistoryPage(1);
+              router.push(urlOrderId ? `/admin/bonuses?orderId=${urlOrderId}` : "/admin/bonuses");
+            }}
+          >
+            Сбросить даты
+          </Button>
+        </div>
+
+        {urlOrderId ? (
+          <p className="text-xs text-brand">
+            Фильтр по заказу: <span className="font-mono">{urlOrderId}</span>
+          </p>
+        ) : null}
+
+        {summaryByType.length > 0 ? (
+          <div className="flex flex-wrap gap-2">
+            {summaryByType.map((s) => (
+              <div
+                key={s.type}
+                className="rounded-lg border border-border bg-surface-1 px-3 py-2 text-sm shadow-sm"
+              >
+                <span className="text-text-2">{bonusTypeLabel(s.type)}: </span>
+                <span className="font-semibold tabular-nums">
+                  {(s._sum.amount ?? 0).toLocaleString("ru-RU")}
+                </span>
+              </div>
+            ))}
+          </div>
+        ) : null}
+
         <p className="text-xs text-text-2">
           Всего записей: {historyTotal}
           {selectedUser ? " (фильтр по клиенту)" : ""}
+          {urlOrderId ? " (фильтр по заказу)" : ""}
         </p>
         <div className="overflow-x-auto rounded-lg border border-border bg-surface-1">
           <table className="w-full min-w-[640px] text-left text-sm">
@@ -542,12 +657,12 @@ export default function AdminBonusesPage() {
                     {new Date(row.createdAt).toLocaleString("ru-RU")}
                   </td>
                   <td className="p-2">{row.user.phone}</td>
-                  <td className="p-2">{row.type}</td>
+                  <td className="p-2">{bonusTypeLabel(row.type)}</td>
                   <td className="p-2 tabular-nums font-medium">{row.amount}</td>
                   <td className="p-2">
                     {row.order ? (
                       <Link
-                        href="/admin/orders"
+                        href={`/admin/orders?highlight=${encodeURIComponent(row.order.orderNumber)}`}
                         className="text-brand hover:underline"
                       >
                         {row.order.orderNumber}
@@ -592,5 +707,20 @@ export default function AdminBonusesPage() {
         </div>
       </section>
     </div>
+  );
+}
+
+export default function AdminBonusesPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="animate-pulse space-y-4 p-4">
+          <div className="h-8 w-40 rounded bg-surface-2" />
+          <div className="h-48 rounded-xl bg-surface-2" />
+        </div>
+      }
+    >
+      <AdminBonusesInner />
+    </Suspense>
   );
 }

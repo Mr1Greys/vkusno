@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import type { Product } from "@/types";
 import { Trash2 } from "lucide-react";
 import { cn, formatPrice } from "@/lib/utils";
@@ -35,6 +36,22 @@ function formatFailedApi(body: unknown, fallback: string): string {
 }
 
 export default function AdminProductsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-[40vh] items-center justify-center text-text-2">
+          Загрузка…
+        </div>
+      }
+    >
+      <AdminProductsPageInner />
+    </Suspense>
+  );
+}
+
+function AdminProductsPageInner() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [products, setProducts] = useState<AdminProduct[]>([]);
   const [categories, setCategories] = useState<AdminCategory[]>([]);
   const [tab, setTab] = useState<CatalogTab>("BAKERY");
@@ -47,6 +64,13 @@ export default function AdminProductsPage() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const cat = searchParams.get("catalog");
+    if (cat === "RESTAURANT" || cat === "BAKERY") {
+      setTab(cat);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     let cancelled = false;
@@ -131,6 +155,15 @@ export default function AdminProductsPage() {
     setShowForm(false);
     setEditingProduct(null);
     setSaveError(null);
+    const q = new URLSearchParams(searchParams.toString());
+    q.set("catalog", next);
+    router.replace(`/admin/products?${q.toString()}`, { scroll: false });
+  };
+
+  const syncCatalogInUrl = (next: CatalogTab) => {
+    const q = new URLSearchParams(searchParams.toString());
+    q.set("catalog", next);
+    router.replace(`/admin/products?${q.toString()}`, { scroll: false });
   };
 
   const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -455,7 +488,9 @@ export default function AdminProductsPage() {
               <Button
                 variant="outline"
                 onClick={() => {
-                  setTab(product.category?.catalog ?? "BAKERY");
+                  const c = product.category?.catalog ?? "BAKERY";
+                  setTab(c);
+                  syncCatalogInUrl(c);
                   setEditingProduct(product);
                   setSaveError(null);
                   setShowForm(true);

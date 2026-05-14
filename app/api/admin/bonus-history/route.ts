@@ -3,6 +3,7 @@ import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import type { BonusType } from "@prisma/client";
 import type { Prisma } from "@prisma/client";
+import { dayEndMoscow, dayStartMoscow } from "@/lib/admin/date-range";
 
 export const dynamic = "force-dynamic";
 
@@ -25,18 +26,31 @@ export async function GET(request: Request) {
   );
   const skip = (page - 1) * take;
   const userId = searchParams.get("userId")?.trim() || undefined;
+  const orderId = searchParams.get("orderId")?.trim() || undefined;
   const typeRaw = searchParams.get("type")?.trim();
   const type: BonusType | undefined =
     typeRaw && BONUS_TYPES.includes(typeRaw as BonusType)
       ? (typeRaw as BonusType)
       : undefined;
 
+  const dateFrom = searchParams.get("dateFrom")?.trim();
+  const dateTo = searchParams.get("dateTo")?.trim();
+  let dateFilter: Prisma.DateTimeFilter | undefined;
+  if (dateFrom && dateTo && /^\d{4}-\d{2}-\d{2}$/.test(dateFrom) && /^\d{4}-\d{2}-\d{2}$/.test(dateTo)) {
+    dateFilter = {
+      gte: dayStartMoscow(dateFrom),
+      lte: dayEndMoscow(dateTo),
+    };
+  }
+
   const where: Prisma.BonusHistoryWhereInput = {
     ...(userId ? { userId } : {}),
+    ...(orderId ? { orderId } : {}),
     ...(type ? { type } : {}),
+    ...(dateFilter ? { createdAt: dateFilter } : {}),
   };
 
-  const [total, rows] = await prisma.$transaction([
+  const [total, rows, summaryByType] = await prisma.$transaction([
     prisma.bonusHistory.count({ where }),
     prisma.bonusHistory.findMany({
       where,
@@ -49,6 +63,12 @@ export async function GET(request: Request) {
         createdBy: { select: { id: true, phone: true, name: true } },
       },
     }),
+    prisma.bonusHistory.groupBy({
+      by: ["type"],
+      where,
+      _sum: { amount: true },
+      orderBy: { type: "asc" },
+    }),
   ]);
 
   return NextResponse.json({
@@ -56,5 +76,6 @@ export async function GET(request: Request) {
     pageSize: take,
     total,
     rows,
+    summaryByType,
   });
 }

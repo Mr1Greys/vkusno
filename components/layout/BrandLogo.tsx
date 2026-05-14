@@ -11,6 +11,8 @@ const boxClass = {
     "h-[5rem] w-[5rem] sm:h-[5.5rem] sm:w-[5.5rem] md:h-[6.5rem] md:w-[6.5rem]",
   /** Баннеры, PWA-подсказка — без ссылки на главную */
   prompt: "h-11 w-11 shrink-0 rounded-[14px]",
+  /** Админ-сайдбар — компактное квадратное лого */
+  admin: "h-12 w-12 shrink-0 rounded-2xl sm:h-[3.25rem] sm:w-[3.25rem]",
 };
 
 type BrandLogoProps = {
@@ -18,6 +20,8 @@ type BrandLogoProps = {
   className?: string;
   /** Без обёртки-ссылки (Install prompt, офлайн-баннер и т.п.) */
   asStatic?: boolean;
+  /** Куда ведёт ссылка (по умолчанию главная витрина) */
+  href?: string;
 };
 
 /**
@@ -29,14 +33,18 @@ export function BrandLogo({
   variant = "hero",
   className,
   asStatic = false,
+  href = "/",
 }: BrandLogoProps) {
   const isPrompt = variant === "prompt";
+  const isAdmin = variant === "admin";
 
   const mark = (
     <span
       className={cn(
         "relative isolate block overflow-hidden bg-cream",
-        isPrompt ? "rounded-[14px]" : "rounded-2xl",
+        isAdmin &&
+          "rounded-2xl bg-gradient-to-br from-brand/[0.14] to-brand/[0.06] ring-1 ring-brand/15",
+        !isAdmin && isPrompt ? "rounded-[14px]" : !isAdmin ? "rounded-2xl" : "",
         boxClass[variant]
       )}
     >
@@ -48,11 +56,13 @@ export function BrandLogo({
         sizes={
           isPrompt
             ? "44px"
-            : "(max-width: 768px) 5rem, (max-width: 1024px) 5.5rem, 6.5rem"
+            : isAdmin
+              ? "52px"
+              : "(max-width: 768px) 5rem, (max-width: 1024px) 5.5rem, 6.5rem"
         }
         className="object-contain object-center mix-blend-darken [filter:sepia(0.04)_saturate(1.06)]"
         unoptimized
-        priority={!isPrompt}
+        priority={!isPrompt && !isAdmin}
         onError={(e) => {
           const target = e.target as HTMLImageElement;
           target.style.display = "none";
@@ -80,9 +90,9 @@ export function BrandLogo({
   }
 
   return (
-    <Link href="/" className={wrapClass}>
+    <Link href={href} className={wrapClass}>
       {mark}
-      <span className="sr-only">Выпечка и Точка — на главную</span>
+      <span className="sr-only">Выпечка и Точка</span>
     </Link>
   );
 }

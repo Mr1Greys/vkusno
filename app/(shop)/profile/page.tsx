@@ -27,6 +27,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { cn, formatPrice } from "@/lib/utils";
+import { bonusTypeLabel } from "@/lib/bonus-type-labels";
 import QRCode from "react-qr-code";
 
 interface Order {
@@ -43,21 +44,6 @@ interface BonusRow {
   amount: number;
   description: string | null;
   createdAt: string;
-}
-
-function bonusTypeLabel(type: string): string {
-  switch (type) {
-    case "EARNED":
-      return "Начисление";
-    case "SPENT":
-      return "Списание";
-    case "MANUAL":
-      return "Корректировка";
-    case "REFERRAL":
-      return "Реферал";
-    default:
-      return type;
-  }
 }
 
 function formatBonusPoints(n: number): string {
@@ -97,7 +83,7 @@ function LoyaltyQrBlock() {
   const qrBg = "#ffffff";
 
   return (
-    <div className="relative isolate w-full max-w-[min(100%,280px)] sm:max-w-none">
+    <div className="relative isolate w-full">
       <div
         aria-hidden
         className="pointer-events-none absolute -inset-px rounded-[26px] bg-gradient-to-br from-white/90 via-white/40 to-accent/[0.12] opacity-90 blur-[1px]"
@@ -159,7 +145,9 @@ function LoyaltyQrBlock() {
 
           <div className="flex items-center gap-2.5 rounded-2xl border border-border/30 bg-cream/50 px-3 py-2.5 text-[11px] leading-snug text-text-2 sm:text-[12px]">
             <Gift className="h-4 w-4 shrink-0 text-accent" strokeWidth={2} aria-hidden />
-            <span>Покажите экран кассиру перед оплатой — так бонусы привяжутся к заказу.</span>
+            <span className="min-w-0 break-words">
+              Покажите экран кассиру перед оплатой — так бонусы привяжутся к заказу.
+            </span>
           </div>
         </div>
       </div>
@@ -621,8 +609,8 @@ export default function ProfilePage() {
         <div className="pointer-events-none absolute -bottom-12 -left-8 h-32 w-32 rounded-full bg-brand/10 blur-2xl" />
 
         <div className="relative p-6 md:p-8">
-          <div className="flex flex-col gap-8 lg:flex-row lg:items-stretch lg:justify-between lg:gap-10">
-            <div className="min-w-0 flex-1 space-y-5">
+          <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between lg:gap-10 xl:gap-12">
+            <div className="min-w-0 w-full flex-1 space-y-5 lg:max-w-2xl xl:max-w-3xl">
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div className="inline-flex items-center gap-2 rounded-full bg-white/85 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-coffee shadow-sm ring-1 ring-border/35">
                   <Sparkles className="h-3.5 w-3.5 text-accent" aria-hidden />
@@ -641,13 +629,13 @@ export default function ProfilePage() {
                 <p className="mt-1 text-sm text-text-2">бонусов на счёте</p>
               </div>
 
-              <p className="max-w-md text-[13px] leading-relaxed text-text-2 md:text-[14px] md:leading-relaxed">
+              <p className="max-w-xl text-[13px] leading-relaxed text-text-2 md:text-[14px] md:leading-relaxed lg:max-w-none">
                 1 бонус = 1 ₽ при оплате заказа. Начисляем от суммы покупки по
                 правилам программы.
               </p>
             </div>
 
-            <div className="flex shrink-0 flex-col items-center justify-start lg:items-end lg:pt-1">
+            <div className="mx-auto w-full max-w-[300px] shrink-0 lg:mx-0 lg:w-[300px]">
               <LoyaltyQrBlock />
             </div>
           </div>

@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { AdminChrome } from "@/components/admin/AdminChrome";
@@ -16,14 +17,15 @@ export default async function AdminLayout({
     redirect("/");
   }
 
-  const navItems = [
-    { href: "/admin", label: "Обзор" },
-    { href: "/admin/orders", label: "Заказы" },
-    { href: "/admin/products", label: "Товары" },
-    { href: "/admin/users", label: "Клиенты" },
-    { href: "/admin/bonuses", label: "Бонусы" },
-    { href: "/admin/settings", label: "Настройки" },
-  ];
-
-  return <AdminChrome navItems={navItems}>{children}</AdminChrome>;
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-background text-sm text-text-2">
+          Загрузка…
+        </div>
+      }
+    >
+      <AdminChrome>{children}</AdminChrome>
+    </Suspense>
+  );
 }
