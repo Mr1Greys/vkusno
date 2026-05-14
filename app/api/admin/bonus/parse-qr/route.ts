@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { verifyLoyaltyQrToken } from "@/lib/loyalty-qr";
+import { extractLoyaltyQrJwt } from "@/lib/extract-loyalty-qr-token";
 
 export const dynamic = "force-dynamic";
 
@@ -12,7 +13,8 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json().catch(() => ({}));
-  const token = typeof body.token === "string" ? body.token.trim() : "";
+  const raw = typeof body.token === "string" ? body.token.trim() : "";
+  const token = extractLoyaltyQrJwt(raw) ?? raw;
   if (!token) {
     return NextResponse.json({ error: "Нет данных QR" }, { status: 400 });
   }

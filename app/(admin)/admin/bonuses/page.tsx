@@ -1,12 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { Gift, Search, Camera } from "lucide-react";
+import { Gift, Search, Camera, CheckCircle2, Loader2, AlertCircle } from "lucide-react";
 import { BonusQrScanner } from "@/components/admin/BonusQrScanner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 
 type UserPreview = {
   id: string;
@@ -40,6 +41,15 @@ export default function AdminBonusesPage() {
   const [history, setHistory] = useState<HistoryRow[]>([]);
   const [historyTotal, setHistoryTotal] = useState(0);
   const [historyPage, setHistoryPage] = useState(1);
+  const [cameraState, setCameraState] = useState<
+    "idle" | "starting" | "live" | "error"
+  >("idle");
+  const [qrVerify, setQrVerify] = useState<
+    "idle" | "verifying" | "found" | "error"
+  >("idle");
+  const verifyGen = useRef(0);
+  const operationRef = useRef<HTMLElement | null>(null);
+  const prevScannerOn = useRef(scannerOn);
 
   const historyQuery = useMemo(() => {
     const p = new URLSearchParams();
@@ -61,20 +71,45 @@ export default function AdminBonusesPage() {
     loadHistory();
   }, [loadHistory]);
 
-  const onQrDecoded = async (text: string) => {
+  useEffect(() => {
+    if (prevScannerOn.current && !scannerOn) {
+      setCameraState("idle");
+      verifyGen.current += 1;
+      setQrVerify((prev) => (prev === "verifying" ? "idle" : prev));
+    }
+    prevScannerOn.current = scannerOn;
+  }, [scannerOn]);
+
+  const focusOperation = useCallback(() => {
+    window.requestAnimationFrame(() => {
+      operationRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+      });
+    });
+  }, []);
+
+  const onQrDecoded = async (token: string) => {
+    const seq = ++verifyGen.current;
     setScanMessage("");
+    setLookupError("");
+    setQrVerify("verifying");
     const res = await fetch("/api/admin/bonus/parse-qr", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token: text }),
+      body: JSON.stringify({ token }),
     });
     const data = await res.json().catch(() => ({}));
+    if (verifyGen.current !== seq) return;
     if (!res.ok) {
+      setQrVerify("error");
       setScanMessage(data.error || "Не удалось прочитать QR");
       return;
     }
+    setQrVerify("found");
     setSelectedUser(data.user);
-    setScanMessage(`Клиент: ${data.user.phone}`);
+    setScanMessage(`Клиент найден: ${data.user.phone}`);
+    focusOperation();
   };
 
   const lookupByPhone = async () => {
@@ -94,6 +129,9 @@ export default function AdminBonusesPage() {
       return;
     }
     setSelectedUser(data.user);
+    setQrVerify("found");
+    setScanMessage(`Клиент найден: ${data.user.phone}`);
+    focusOperation();
   };
 
   const submitAdjust = async (source: "QR" | "MANUAL") => {
@@ -144,18 +182,129 @@ export default function AdminBonusesPage() {
             <Camera className="h-4 w-4" />
             Сканер QR
           </div>
-          <label className="flex items-center gap-2 text-sm">
+          <p className="text-xs leading-relaxed text-text-2">
+            Наведите камеру на QR из раздела «Бонусы» в профиле клиента в нашем приложении —
+            это не платёжный QR банка. Если код не читается, проверьте яркость экрана и
+            расстояние 15–25 см.
+          </p>
+          <label className="flex cursor-pointer items-center gap-2 text-sm">
             <input
               type="checkbox"
               checked={scannerOn}
               onChange={(e) => setScannerOn(e.target.checked)}
+              className="h-4 w-4 accent-brand"
             />
             Включить камеру
           </label>
-          <BonusQrScanner active={scannerOn} onDecoded={onQrDecoded} />
-          {scanMessage ? (
-            <p className="text-sm text-text-2">{scanMessage}</p>
-          ) : null}
+          <BonusQrScanner
+            active={scannerOn}
+            onDecoded={onQrDecoded}
+            onCameraState={setCameraState}
+          />
+          <div className="space-y-2 rounded-xl border border-border/80 bg-surface-2/60 p-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <span
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide",
+                  cameraState === "live" &&
+                    "border-emerald-500/35 bg-emerald-500/10 text-emerald-800",
+                  cameraState === "starting" &&
+                    "border-amber-500/35 bg-amber-500/10 text-amber-900",
+                  cameraState === "error" &&
+                    "border-destructive/35 bg-destructive/10 text-destructive",
+                  cameraState === "idle" &&
+                    "border-border bg-surface-1 text-text-2"
+                )}
+              >
+                {cameraState === "starting" ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
+                ) : null}
+                {cameraState === "live" ? (
+                  <span
+                    className="h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_0_3px_rgba(34,197,94,0.25)]"
+                    aria-hidden
+                  />
+                ) : null}
+                {cameraState === "error" ? (
+                  <AlertCircle className="h-3.5 w-3.5" aria-hidden />
+                ) : null}
+                {cameraState === "idle" && !scannerOn
+                  ? "Камера выключена"
+                  : cameraState === "idle"
+                    ? "Камера"
+                    : cameraState === "starting"
+                      ? "Запуск…"
+                      : cameraState === "live"
+                        ? "Сканирование"
+                        : "Ошибка камеры"}
+              </span>
+              <span
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide",
+                  qrVerify === "verifying" &&
+                    "border-brand/30 bg-brand/5 text-brand",
+                  qrVerify === "found" &&
+                    "border-emerald-500/35 bg-emerald-500/10 text-emerald-800",
+                  qrVerify === "error" &&
+                    "border-destructive/35 bg-destructive/10 text-destructive",
+                  qrVerify === "idle" && "border-border bg-surface-1 text-text-2"
+                )}
+              >
+                {qrVerify === "verifying" ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
+                ) : null}
+                {qrVerify === "found" ? (
+                  <CheckCircle2 className="h-3.5 w-3.5" aria-hidden />
+                ) : null}
+                {qrVerify === "error" ? (
+                  <AlertCircle className="h-3.5 w-3.5" aria-hidden />
+                ) : null}
+                {qrVerify === "idle"
+                  ? "Код"
+                  : qrVerify === "verifying"
+                    ? "Проверка…"
+                    : qrVerify === "found"
+                      ? "Клиент найден"
+                      : "Ошибка кода"}
+              </span>
+            </div>
+            {scanMessage ? (
+              <p
+                className={cn(
+                  "text-sm",
+                  qrVerify === "error" ? "text-destructive" : "text-text-2"
+                )}
+              >
+                {scanMessage}
+              </p>
+            ) : null}
+            {qrVerify === "found" && selectedUser ? (
+              <div className="flex gap-3 rounded-lg border border-brand/20 bg-surface-1 p-3 text-sm shadow-sm">
+                <CheckCircle2
+                  className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600"
+                  aria-hidden
+                />
+                <div className="space-y-1">
+                  <p className="font-semibold text-text">
+                    Готово к операции
+                  </p>
+                  <p className="text-text-2">
+                    Ниже введите сумму баллов (положительное число — начислить) и нажмите
+                    «Применить» или «Записать как по QR».
+                  </p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="mt-2"
+                    onClick={focusOperation}
+                  >
+                    К форме начисления
+                  </Button>
+                </div>
+              </div>
+            ) : null}
+          </div>
         </section>
 
         <section className="space-y-4 rounded-lg border border-border bg-surface-1 p-4">
@@ -176,7 +325,15 @@ export default function AdminBonusesPage() {
         </section>
       </div>
 
-      <section className="space-y-4 rounded-lg border border-border bg-surface-1 p-4">
+      <section
+        ref={operationRef}
+        className={cn(
+          "space-y-4 rounded-lg border border-border bg-surface-1 p-4 transition-shadow duration-500",
+          qrVerify === "found" &&
+            selectedUser &&
+            "shadow-[0_0_0_2px_rgba(74,60,47,0.12),0_8px_28px_rgba(74,60,47,0.08)]"
+        )}
+      >
         <div className="flex items-center gap-2 font-semibold">
           <Gift className="h-4 w-4" />
           Операция

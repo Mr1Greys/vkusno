@@ -44,6 +44,16 @@ const config: Config = {
         card: "0 2px 8px rgba(74, 60, 47, 0.06)",
         "card-hover": "0 8px 24px rgba(74, 60, 47, 0.12)",
       },
+      keyframes: {
+        "bonus-scanline": {
+          "0%": { top: "6%", opacity: "0.55" },
+          "50%": { top: "calc(94% - 2px)", opacity: "1" },
+          "100%": { top: "6%", opacity: "0.55" },
+        },
+      },
+      animation: {
+        "bonus-scanline": "bonus-scanline 2.5s ease-in-out infinite",
+      },
     },
   },
   plugins: [],
