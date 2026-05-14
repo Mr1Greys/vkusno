@@ -43,6 +43,14 @@ export function computeBonusEarned(
   );
 }
 
-export function maxBonusSpendForSubtotal(subtotal: number): number {
-  return Math.floor(subtotal * BONUS_SPEND_MAX_FRACTION);
+/** Максимальная скидка бонусами в копейках (30% от суммы товаров в копейках). */
+export function maxBonusSpendForSubtotal(subtotalKopeks: number): number {
+  return Math.floor(subtotalKopeks * BONUS_SPEND_MAX_FRACTION);
+}
+
+/**
+ * Сколько бонусных баллов можно списать (1 балл = 1 ₽ к оплате), при сумме товаров в копейках.
+ */
+export function maxBonusPointsForSubtotal(subtotalKopeks: number): number {
+  return Math.floor(maxBonusSpendForSubtotal(subtotalKopeks) / KOPEKS_PER_RUBLE);
 }

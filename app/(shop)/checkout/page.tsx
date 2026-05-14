@@ -12,7 +12,7 @@ import { useDeliveryStore } from "@/store/deliveryStore";
 import { useAuthStore } from "@/store/authStore";
 import { cn, formatPrice } from "@/lib/utils";
 import { remainingAfterCart } from "@/lib/cart-stock";
-import { maxBonusSpendForSubtotal } from "@/lib/shop-settings";
+import { maxBonusPointsForSubtotal } from "@/lib/shop-settings";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -79,7 +79,7 @@ export default function CheckoutPage() {
   const total = getTotal();
   const maxBonus = Math.min(
     user?.bonusPoints || 0,
-    maxBonusSpendForSubtotal(total)
+    maxBonusPointsForSubtotal(total)
   );
 
   useEffect(() => {

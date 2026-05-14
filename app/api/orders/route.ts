@@ -6,7 +6,7 @@ import {
   computeBonusEarned,
   getDeliveryCost,
   KOPEKS_PER_RUBLE,
-  maxBonusSpendForSubtotal,
+  maxBonusPointsForSubtotal,
   settingsRowsToMap,
 } from "@/lib/shop-settings";
 
@@ -105,7 +105,9 @@ export async function POST(request: Request) {
 
     const deliveryCost = getDeliveryCost(subtotal, deliveryType, settingsMap);
 
+    /** Баллы: 1 б. = 1 ₽ скидки (не копейки). */
     const bonusUsed = Math.max(0, Math.floor(Number(bonusUsedRaw) || 0));
+    const bonusUsedKop = bonusUsed * KOPEKS_PER_RUBLE;
 
     if (!session) {
       if (bonusUsed !== 0) {
@@ -127,8 +129,10 @@ export async function POST(request: Request) {
         );
       }
     } else {
-      const maxBySubtotal = maxBonusSpendForSubtotal(subtotal);
-      const cap = Math.min(session.bonusPoints, maxBySubtotal);
+      const cap = Math.min(
+        session.bonusPoints,
+        maxBonusPointsForSubtotal(subtotal)
+      );
       if (bonusUsed > cap) {
         return NextResponse.json(
           { error: "Превышен лимит списания бонусов" },
@@ -137,7 +141,7 @@ export async function POST(request: Request) {
       }
     }
 
-    const finalAmount = subtotal + deliveryCost - bonusUsed;
+    const finalAmount = subtotal + deliveryCost - bonusUsedKop;
     if (finalAmount < 0) {
       return NextResponse.json(
         { error: "Сумма к оплате не может быть отрицательной" },

@@ -12,6 +12,7 @@ import {
   getDeliveryCost,
   computeBonusEarned,
   KOPEKS_PER_RUBLE,
+  maxBonusPointsForSubtotal,
   maxBonusSpendForSubtotal,
 } from "@/lib/shop-settings";
 import { Input } from "@/components/ui/input";
@@ -62,14 +63,17 @@ export function CartBonusSummary({
       ? getDeliveryCost(subtotal, "DELIVERY", shopSettings)
       : 0;
   const maxBonus = user
-    ? Math.min(user.bonusPoints, maxBonusSpendForSubtotal(subtotal))
+    ? Math.min(user.bonusPoints, maxBonusPointsForSubtotal(subtotal))
     : 0;
 
   useEffect(() => {
     if (bonusToUse > maxBonus) setBonusToUse(maxBonus);
   }, [bonusToUse, maxBonus, setBonusToUse]);
 
-  const finalPayable = Math.max(0, subtotal + deliveryCost - bonusToUse);
+  const finalPayable = Math.max(
+    0,
+    subtotal + deliveryCost - bonusToUse * KOPEKS_PER_RUBLE
+  );
   const estimatedEarnLoggedIn =
     user != null ? computeBonusEarned(finalPayable, shopSettings) : 0;
   const teaserEarnGuest = computeBonusEarned(
@@ -122,7 +126,7 @@ export function CartBonusSummary({
         <div className="flex items-center justify-between text-[15px] text-success">
           <span>Списание бонусами</span>
           <span className="font-semibold tabular-nums">
-            −{formatPrice(bonusToUse)}
+            −{formatPrice(bonusToUse * KOPEKS_PER_RUBLE)}
           </span>
         </div>
       )}
@@ -250,8 +254,8 @@ export function CartBonusSummary({
             />
           </div>
           <p className="text-[11px] leading-relaxed text-text-3">
-            До {maxBonusSpendForSubtotal(subtotal)} ₽ можно оплатить бонусами
-            (30% от суммы товаров).
+            До {formatPrice(maxBonusSpendForSubtotal(subtotal))} можно оплатить
+            бонусами (30% от суммы товаров).
           </p>
         </div>
       )}
