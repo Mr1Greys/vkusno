@@ -15,6 +15,55 @@ type BonusQrScannerProps = {
   onCameraState?: (state: "idle" | "starting" | "live" | "error") => void;
 };
 
+function disposeStream(stream: MediaStream | null) {
+  if (!stream) return;
+  stream.getTracks().forEach((t) => {
+    try {
+      t.stop();
+    } catch {
+      /* ignore */
+    }
+  });
+}
+
+function withTimeout<T>(promise: Promise<T>, ms: number, message: string): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const t = setTimeout(() => reject(new Error(message)), ms);
+    promise.then(
+      (v) => {
+        clearTimeout(t);
+        resolve(v);
+      },
+      (e) => {
+        clearTimeout(t);
+        reject(e);
+      }
+    );
+  });
+}
+
+/**
+ * Мягкие ограничения для мобильных Safari: без ideal 1920×1080 (часто зависает getUserMedia).
+ */
+async function getPreferredCameraStream(): Promise<MediaStream> {
+  const attempts: MediaStreamConstraints[] = [
+    { audio: false, video: { facingMode: { ideal: "environment" } } },
+    { audio: false, video: { facingMode: "environment" } },
+    { audio: false, video: { facingMode: "user" } },
+    { audio: false, video: true },
+  ];
+  let last: unknown;
+  for (const c of attempts) {
+    try {
+      return await navigator.mediaDevices.getUserMedia(c);
+    } catch (e) {
+      last = e;
+    }
+  }
+  if (last instanceof Error) throw last;
+  throw new Error(String(last));
+}
+
 export function BonusQrScanner({
   onDecoded,
   active,
@@ -22,9 +71,11 @@ export function BonusQrScanner({
 }: BonusQrScannerProps) {
   const controlsRef = useRef<IScannerControls | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
   const lastTokenRef = useRef<string>("");
   const cooldownRef = useRef<number>(0);
   const [cameraError, setCameraError] = useState<string | null>(null);
+  const [needsTapPlay, setNeedsTapPlay] = useState(false);
 
   const handleDecode = useCallback(
     (text: string) => {
@@ -45,7 +96,13 @@ export function BonusQrScanner({
     if (!active) {
       controlsRef.current?.stop();
       controlsRef.current = null;
+      disposeStream(streamRef.current);
+      streamRef.current = null;
+      if (videoRef.current) {
+        videoRef.current.srcObject = null;
+      }
       setCameraError(null);
+      setNeedsTapPlay(false);
       onCameraState?.("idle");
       return;
     }
@@ -55,57 +112,79 @@ export function BonusQrScanner({
     hints.set(DecodeHintType.POSSIBLE_FORMATS, [BarcodeFormat.QR_CODE]);
     hints.set(DecodeHintType.TRY_HARDER, true);
 
-    const reader = new BrowserMultiFormatReader(hints);
-    const videoEl = videoRef.current;
-    if (!videoEl) return;
-
-    onCameraState?.("starting");
-    setCameraError(null);
-
-    const callback = (result: Result | undefined) => {
-      if (!result || cancelled) return;
-      handleDecode(result.getText());
-    };
+    const reader = new BrowserMultiFormatReader(hints, {
+      tryPlayVideoTimeout: 16000,
+      delayBetweenScanAttempts: 220,
+    });
 
     const start = async () => {
-      try {
-        try {
-          const c = await reader.decodeFromConstraints(
-            {
-              video: {
-                facingMode: { ideal: "environment" },
-                width: { ideal: 1920 },
-                height: { ideal: 1080 },
-              },
-            },
-            videoEl,
-            callback
-          );
-          if (cancelled) {
-            c.stop();
-            return;
-          }
-          controlsRef.current = c;
-          onCameraState?.("live");
-        } catch {
-          const c = await reader.decodeFromVideoDevice(
-            undefined,
-            videoEl,
-            callback
-          );
-          if (cancelled) {
-            c.stop();
-            return;
-          }
-          controlsRef.current = c;
-          onCameraState?.("live");
+      const waitForVideoEl = async (): Promise<HTMLVideoElement | null> => {
+        for (let i = 0; i < 30; i++) {
+          if (cancelled) return null;
+          const el = videoRef.current;
+          if (el) return el;
+          await new Promise((r) => requestAnimationFrame(r));
         }
+        return videoRef.current;
+      };
+
+      const videoEl = await waitForVideoEl();
+      if (cancelled || !videoEl) return;
+
+      onCameraState?.("starting");
+      setCameraError(null);
+      setNeedsTapPlay(false);
+
+      let stream: MediaStream | null = null;
+      try {
+        stream = await withTimeout(
+          getPreferredCameraStream(),
+          20000,
+          "Камера не ответила за 20 с. Проверьте разрешение и перезагрузите страницу."
+        );
+        if (cancelled) {
+          disposeStream(stream);
+          return;
+        }
+        streamRef.current = stream;
+
+        const callback = (result: Result | undefined) => {
+          if (!result || cancelled) return;
+          handleDecode(result.getText());
+        };
+
+        const controls = await withTimeout(
+          reader.decodeFromStream(stream, videoEl, callback),
+          22000,
+          "Не удалось запустить предпросмотр камеры."
+        );
+        if (cancelled) {
+          controls.stop();
+          disposeStream(stream);
+          return;
+        }
+        controlsRef.current = controls;
+        onCameraState?.("live");
+
+        // iOS: иногда первый кадр без явного play после жеста — подсказка «тап»
+        requestAnimationFrame(() => {
+          if (cancelled) return;
+          const v = videoRef.current;
+          if (v && v.srcObject && (v.paused || v.readyState < 2)) {
+            setNeedsTapPlay(true);
+          }
+        });
       } catch (e) {
-        if (cancelled) return;
+        if (cancelled) {
+          disposeStream(stream);
+          return;
+        }
+        disposeStream(stream);
+        streamRef.current = null;
         const msg =
           e instanceof Error
             ? e.message
-            : "Не удалось открыть камеру. Разрешите доступ в настройках браузера.";
+            : "Не удалось открыть камеру. Разрешите доступ и используйте HTTPS.";
         setCameraError(msg);
         onCameraState?.("error");
       }
@@ -117,9 +196,25 @@ export function BonusQrScanner({
       cancelled = true;
       controlsRef.current?.stop();
       controlsRef.current = null;
+      disposeStream(streamRef.current);
+      streamRef.current = null;
+      if (videoRef.current) {
+        videoRef.current.srcObject = null;
+      }
       onCameraState?.("idle");
     };
   }, [active, handleDecode, onCameraState]);
+
+  const resumePreview = useCallback(async () => {
+    const v = videoRef.current;
+    if (!v) return;
+    try {
+      await v.play();
+      setNeedsTapPlay(false);
+    } catch {
+      setCameraError("Нажмите ещё раз или проверьте разрешения камеры в настройках браузера.");
+    }
+  }, []);
 
   return (
     <div className="mx-auto w-full max-w-[280px] space-y-2">
@@ -152,8 +247,17 @@ export function BonusQrScanner({
             ) : null}
           </div>
         </div>
+        {active && needsTapPlay ? (
+          <button
+            type="button"
+            onClick={resumePreview}
+            className="absolute inset-0 z-10 flex items-center justify-center bg-black/45 px-4 text-center text-sm font-medium text-white backdrop-blur-[2px]"
+          >
+            Нажмите, чтобы включить предпросмотр камеры
+          </button>
+        ) : null}
         {active ? (
-          <p className="pointer-events-none absolute bottom-2 left-0 right-0 text-center text-[10px] font-semibold uppercase tracking-[0.14em] text-white/90 drop-shadow">
+          <p className="pointer-events-none absolute bottom-2 left-0 right-0 z-[5] text-center text-[10px] font-semibold uppercase tracking-[0.14em] text-white/90 drop-shadow">
             Наведите рамку на QR в приложении клиента
           </p>
         ) : null}
