@@ -5,6 +5,12 @@ import Link from "next/link";
 import { Gift, Search, Camera, CheckCircle2, Loader2, AlertCircle } from "lucide-react";
 import { BonusQrScanner } from "@/components/admin/BonusQrScanner";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
@@ -47,9 +53,17 @@ export default function AdminBonusesPage() {
   const [qrVerify, setQrVerify] = useState<
     "idle" | "verifying" | "found" | "error"
   >("idle");
+  const [bonusModalOpen, setBonusModalOpen] = useState(false);
+  const [bonusModalSource, setBonusModalSource] = useState<"QR" | "PHONE">(
+    "PHONE"
+  );
+  const [modalAmount, setModalAmount] = useState("");
+  const [modalReason, setModalReason] = useState("");
   const verifyGen = useRef(0);
   const operationRef = useRef<HTMLElement | null>(null);
   const prevScannerOn = useRef(scannerOn);
+  const cameraScanActive =
+    scannerOn && qrVerify !== "verifying" && qrVerify !== "found";
 
   const historyQuery = useMemo(() => {
     const p = new URLSearchParams();
@@ -80,15 +94,6 @@ export default function AdminBonusesPage() {
     prevScannerOn.current = scannerOn;
   }, [scannerOn]);
 
-  const focusOperation = useCallback(() => {
-    window.requestAnimationFrame(() => {
-      operationRef.current?.scrollIntoView({
-        behavior: "smooth",
-        block: "nearest",
-      });
-    });
-  }, []);
-
   const onQrDecoded = async (token: string) => {
     const seq = ++verifyGen.current;
     setScanMessage("");
@@ -109,7 +114,11 @@ export default function AdminBonusesPage() {
     setQrVerify("found");
     setSelectedUser(data.user);
     setScanMessage(`Клиент найден: ${data.user.phone}`);
-    focusOperation();
+    setScannerOn(false);
+    setBonusModalSource("QR");
+    setModalAmount("");
+    setModalReason("");
+    setBonusModalOpen(true);
   };
 
   const lookupByPhone = async () => {
@@ -131,16 +140,22 @@ export default function AdminBonusesPage() {
     setSelectedUser(data.user);
     setQrVerify("found");
     setScanMessage(`Клиент найден: ${data.user.phone}`);
-    focusOperation();
+    setScannerOn(false);
+    setBonusModalSource("PHONE");
+    setModalAmount("");
+    setModalReason("");
+    setBonusModalOpen(true);
   };
 
-  const submitAdjust = async (source: "QR" | "MANUAL") => {
+  const submitAdjustDelta = async (
+    deltaValue: number,
+    source: "QR" | "MANUAL",
+    reasonText: string
+  ) => {
     if (!selectedUser) return;
-    const d = Math.trunc(Number(delta.replace(",", ".")));
+    const d = Math.trunc(deltaValue);
     if (!Number.isFinite(d) || d === 0) {
-      setLookupError(
-        "Укажите целое число баллов (положительное — начислить, отрицательное — списать)"
-      );
+      setLookupError("Укажите ненулевое целое число баллов");
       return;
     }
     setSubmitting(true);
@@ -151,7 +166,7 @@ export default function AdminBonusesPage() {
       body: JSON.stringify({
         userId: selectedUser.id,
         delta: d,
-        reason,
+        reason: reasonText,
         source,
       }),
     });
@@ -164,7 +179,41 @@ export default function AdminBonusesPage() {
     if (data.user) setSelectedUser(data.user);
     setDelta("");
     setReason("");
+    setModalAmount("");
+    setModalReason("");
+    setBonusModalOpen(false);
+    setQrVerify("idle");
     await loadHistory();
+  };
+
+  const submitAdjust = async (source: "QR" | "MANUAL") => {
+    if (!selectedUser) return;
+    const d = Math.trunc(Number(delta.replace(",", ".")));
+    if (!Number.isFinite(d) || d === 0) {
+      setLookupError(
+        "Укажите целое число баллов (положительное — начислить, отрицательное — списать)"
+      );
+      return;
+    }
+    await submitAdjustDelta(d, source, reason);
+  };
+
+  const submitModal = async (sign: 1 | -1) => {
+    const amount = Math.trunc(Number(modalAmount.replace(",", ".")));
+    if (!Number.isFinite(amount) || amount <= 0) {
+      setLookupError("Введите целое число баллов больше нуля");
+      return;
+    }
+    const src = bonusModalSource === "QR" ? "QR" : "MANUAL";
+    await submitAdjustDelta(sign * amount, src, modalReason);
+  };
+
+  const onBonusModalOpenChange = (open: boolean) => {
+    setBonusModalOpen(open);
+    if (!open) {
+      setQrVerify("idle");
+      setLookupError("");
+    }
   };
 
   return (
@@ -197,7 +246,7 @@ export default function AdminBonusesPage() {
             Включить камеру
           </label>
           <BonusQrScanner
-            active={scannerOn}
+            active={cameraScanActive}
             onDecoded={onQrDecoded}
             onCameraState={setCameraState}
           />
@@ -279,30 +328,10 @@ export default function AdminBonusesPage() {
               </p>
             ) : null}
             {qrVerify === "found" && selectedUser ? (
-              <div className="flex gap-3 rounded-lg border border-brand/20 bg-surface-1 p-3 text-sm shadow-sm">
-                <CheckCircle2
-                  className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600"
-                  aria-hidden
-                />
-                <div className="space-y-1">
-                  <p className="font-semibold text-text">
-                    Готово к операции
-                  </p>
-                  <p className="text-text-2">
-                    Ниже введите сумму баллов (положительное число — начислить) и нажмите
-                    «Применить» или «Записать как по QR».
-                  </p>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="mt-2"
-                    onClick={focusOperation}
-                  >
-                    К форме начисления
-                  </Button>
-                </div>
-              </div>
+              <p className="text-sm text-emerald-800">
+                Клиент выбран — открыто окно операции. После закрытия можно снова включить камеру для
+                следующего гостя.
+              </p>
             ) : null}
           </div>
         </section>
@@ -325,12 +354,89 @@ export default function AdminBonusesPage() {
         </section>
       </div>
 
+      <Dialog open={bonusModalOpen} onOpenChange={onBonusModalOpenChange}>
+        <DialogContent className="max-h-[min(90vh,640px)] w-[min(100vw-1.5rem,26rem)] gap-4 overflow-y-auto p-5 sm:p-6">
+          <DialogHeader>
+            <DialogTitle className="font-display text-xl">
+              {bonusModalSource === "QR" ? "Клиент по QR" : "Клиент по телефону"}
+            </DialogTitle>
+          </DialogHeader>
+          {selectedUser ? (
+            <div className="space-y-4">
+              <div className="rounded-lg bg-surface-2 p-3 text-sm">
+                <p className="font-medium">{selectedUser.name || "—"}</p>
+                <p className="text-text-2">{selectedUser.phone}</p>
+                <p className="mt-1 tabular-nums">
+                  Баланс:{" "}
+                  <span className="font-semibold text-brand">
+                    {selectedUser.bonusPoints}
+                  </span>
+                </p>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="modal-bonus-amount">Сумма (целое число баллов)</Label>
+                <Input
+                  id="modal-bonus-amount"
+                  inputMode="numeric"
+                  autoComplete="off"
+                  autoFocus
+                  placeholder="Например, 50"
+                  value={modalAmount}
+                  onChange={(e) => setModalAmount(e.target.value)}
+                  disabled={submitting}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="modal-bonus-reason">Комментарий (необязательно)</Label>
+                <Input
+                  id="modal-bonus-reason"
+                  value={modalReason}
+                  onChange={(e) => setModalReason(e.target.value)}
+                  disabled={submitting}
+                />
+              </div>
+              {lookupError ? (
+                <p className="text-sm text-error">{lookupError}</p>
+              ) : null}
+              <div className="grid gap-2 sm:grid-cols-2">
+                <Button
+                  type="button"
+                  disabled={submitting || !selectedUser}
+                  onClick={() => {
+                    setLookupError("");
+                    void submitModal(1);
+                  }}
+                >
+                  Начислить
+                </Button>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  disabled={submitting || !selectedUser}
+                  onClick={() => {
+                    setLookupError("");
+                    void submitModal(-1);
+                  }}
+                >
+                  Списать
+                </Button>
+              </div>
+              <p className="text-center text-xs text-text-2">
+                Запись в журнале:{" "}
+                {bonusModalSource === "QR" ? "«по QR»" : "«вручную»"}.
+              </p>
+            </div>
+          ) : (
+            <p className="text-sm text-text-2">Нет данных клиента.</p>
+          )}
+        </DialogContent>
+      </Dialog>
+
       <section
         ref={operationRef}
         className={cn(
           "space-y-4 rounded-lg border border-border bg-surface-1 p-4 transition-shadow duration-500",
-          qrVerify === "found" &&
-            selectedUser &&
+          selectedUser &&
             "shadow-[0_0_0_2px_rgba(74,60,47,0.12),0_8px_28px_rgba(74,60,47,0.08)]"
         )}
       >
@@ -351,7 +457,8 @@ export default function AdminBonusesPage() {
           </div>
         ) : (
           <p className="text-sm text-text-2">
-            Сначала отсканируйте QR или найдите клиента по телефону.
+            После сканирования или поиска по телефону откроется окно начисления. Ниже — запасной
+            ввод, если удобнее без модального окна.
           </p>
         )}
         {lookupError ? (

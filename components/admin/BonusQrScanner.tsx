@@ -74,6 +74,7 @@ export function BonusQrScanner({
   const streamRef = useRef<MediaStream | null>(null);
   const lastTokenRef = useRef<string>("");
   const cooldownRef = useRef<number>(0);
+  const decodeOnceDoneRef = useRef(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [needsTapPlay, setNeedsTapPlay] = useState(false);
 
@@ -93,6 +94,8 @@ export function BonusQrScanner({
   );
 
   useEffect(() => {
+    decodeOnceDoneRef.current = false;
+
     if (!active) {
       controlsRef.current?.stop();
       controlsRef.current = null;
@@ -149,8 +152,17 @@ export function BonusQrScanner({
         streamRef.current = stream;
 
         const callback = (result: Result | undefined) => {
-          if (!result || cancelled) return;
-          handleDecode(result.getText());
+          if (!result || cancelled || decodeOnceDoneRef.current) return;
+          const raw = result.getText();
+          const token = extractLoyaltyQrJwt(raw);
+          if (!token) return;
+          decodeOnceDoneRef.current = true;
+          try {
+            controlsRef.current?.stop();
+          } catch {
+            /* ignore */
+          }
+          handleDecode(raw);
         };
 
         const controls = await withTimeout(
@@ -166,7 +178,16 @@ export function BonusQrScanner({
         controlsRef.current = controls;
         onCameraState?.("live");
 
-        // iOS: иногда первый кадр без явного play после жеста — подсказка «тап»
+        videoEl.setAttribute("playsinline", "true");
+        videoEl.playsInline = true;
+        videoEl.muted = true;
+        try {
+          await videoEl.play();
+          setNeedsTapPlay(false);
+        } catch {
+          setNeedsTapPlay(true);
+        }
+
         requestAnimationFrame(() => {
           if (cancelled) return;
           const v = videoRef.current;
@@ -221,21 +242,16 @@ export function BonusQrScanner({
       <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl border border-border bg-black shadow-inner ring-1 ring-black/20">
         <video
           ref={videoRef}
-          className="h-full w-full object-cover"
+          className="absolute inset-0 z-[1] h-full w-full object-cover [transform:translateZ(0)]"
           muted
           playsInline
           autoPlay
         />
         <div
-          className="pointer-events-none absolute inset-0 flex items-center justify-center p-[10%]"
+          className="pointer-events-none absolute inset-0 z-[2] flex items-center justify-center p-[10%]"
           aria-hidden
         >
-          <div
-            className={cn(
-              "relative h-full w-full rounded-xl border-2 border-dashed border-white/55 shadow-[inset_0_0_24px_rgba(0,0,0,0.25)]",
-              active && "animate-pulse [animation-duration:2.2s]"
-            )}
-          >
+          <div className="relative h-full w-full rounded-xl border-2 border-dashed border-white/50">
             <span className="absolute left-2 top-2 h-5 w-5 border-l-2 border-t-2 border-white" />
             <span className="absolute right-2 top-2 h-5 w-5 border-r-2 border-t-2 border-white" />
             <span className="absolute bottom-2 left-2 h-5 w-5 border-b-2 border-l-2 border-white" />
@@ -251,13 +267,13 @@ export function BonusQrScanner({
           <button
             type="button"
             onClick={resumePreview}
-            className="absolute inset-0 z-10 flex items-center justify-center bg-black/45 px-4 text-center text-sm font-medium text-white backdrop-blur-[2px]"
+            className="absolute inset-0 z-20 flex items-center justify-center bg-black/45 px-4 text-center text-sm font-medium text-white backdrop-blur-[2px]"
           >
             Нажмите, чтобы включить предпросмотр камеры
           </button>
         ) : null}
         {active ? (
-          <p className="pointer-events-none absolute bottom-2 left-0 right-0 z-[5] text-center text-[10px] font-semibold uppercase tracking-[0.14em] text-white/90 drop-shadow">
+          <p className="pointer-events-none absolute bottom-2 left-0 right-0 z-[3] text-center text-[10px] font-semibold uppercase tracking-[0.14em] text-white/90 drop-shadow">
             Наведите рамку на QR в приложении клиента
           </p>
         ) : null}
