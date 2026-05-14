@@ -3,8 +3,11 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  /// Прямое подключение без PgBouncer (Neon «Direct»). Нужно для `migrate deploy` и advisory lock.
+  /// Локально без пула можно продублировать значение `DATABASE_URL`.
+  directUrl = env("DIRECT_URL")
 }
 
 model User {

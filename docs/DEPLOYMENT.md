@@ -38,7 +38,8 @@ git push -u origin main
 
    | Переменная | Описание |
    |------------|----------|
-   | `DATABASE_URL` | Строка PostgreSQL (Vercel Postgres, Neon, Supabase и т.д.). Нужна **в проде для работы сайта**; сборка проходит без неё только потому что Prisma вызывается в динамических маршрутах. |
+   | `DATABASE_URL` | Строка PostgreSQL. Для **Neon** обычно берут **Pooled** (хост с `-pooler`) — для работы приложения и Prisma Client. |
+   | `DIRECT_URL` | **Обязательно**, если в `DATABASE_URL` используется pooler (Neon, Supabase pooler и т.п.). Строка **прямого** подключения без `-pooler` — из Neon раздел *Connection details* → *Direct*. Иначе `prisma migrate deploy` на Vercel может упасть с **P1002** (таймаут advisory lock). Локально без пула можно указать то же значение, что и `DATABASE_URL`. |
    | `JWT_SECRET` | Случайная строка ≥ 32 символов |
    | `NEXT_PUBLIC_APP_URL` | Публичный URL сайта, например `https://ваш-проект.vercel.app` |
    | `ADMIN_INIT_KEY` | Секрет для первичной настройки админки (если используется) |
