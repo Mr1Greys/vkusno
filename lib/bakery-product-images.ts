@@ -24,8 +24,6 @@ export const BAKERY_PRODUCT_IMAGE_BY_NAME: Record<string, string> = {
   "Сочник с творогом": "/images/products/bakery/sweet-pastry/sochnik-tvorog.webp",
   Сырник: "/images/products/bakery/sweet-pastry/syrnik.webp",
   Штрудель: "/images/products/bakery/sweet-pastry/shtrudel.webp",
-  "Донат ванильный": "/images/products/bakery/sweet-pastry/bulochka-korica.webp",
-  "Донат Карамельный": "/images/products/bakery/sweet-pastry/rogalik-karamel.webp",
 };
 
 /** Нет отдельного кадра — показываем ближайший имеющийся вариант */
@@ -35,13 +33,6 @@ const BAKERY_PRODUCT_IMAGE_FALLBACK: Record<string, string> = {
   "Бутер с семгой": "/images/products/bakery/fastfood/sendvich-indeyka.webp",
   "Сендвич с индейкой": "/images/products/bakery/fastfood/sendvich-indeyka.webp",
   "Сендвич с сёмгой": "/images/products/bakery/fastfood/sendvich-indeyka.webp",
-  Медовик: "/images/products/bakery/sweet-pastry/shtrudel.webp",
-  Наполеон: "/images/products/bakery/sweet-pastry/vatrushka.webp",
-  "Торт Медовик": "/images/products/bakery/sweet-pastry/shtrudel.webp",
-  Картошка: "/images/products/bakery/sweet-pastry/keks-orehi.webp",
-  "Ореховые пальчики": "/images/products/bakery/sweet-pastry/keks-orehi.webp",
-  Пахлава: "/images/products/bakery/sweet-pastry/syrnik.webp",
-  "Яблочный пирог": "/images/products/bakery/sweet-pastry/bulochka-vishnya.webp",
 };
 
 export function resolveBakeryProductImage(productName: string): string | undefined {
