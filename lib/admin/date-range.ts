@@ -63,6 +63,26 @@ export function resolveRangeFromSearchParams(searchParams: {
   return { from: addDaysIsoMoscow(today, -6), to: today, preset: "week" };
 }
 
+/** Все календарные дни от from до to включительно. */
+export function enumerateDaysInclusive(fromIso: string, toIso: string): string[] {
+  const days: string[] = [];
+  let cur = fromIso;
+  while (cur <= toIso) {
+    days.push(cur);
+    cur = addDaysIsoMoscow(cur, 1);
+  }
+  return days;
+}
+
+export function countDaysInclusive(fromIso: string, toIso: string): number {
+  return enumerateDaysInclusive(fromIso, toIso).length;
+}
+
+/** Date из БД → YYYY-MM-DD по Москве. */
+export function isoDateFromDbDate(d: Date): string {
+  return moscowDateFormatter.format(d);
+}
+
 export function previousPeriodSameLength(fromIso: string, toIso: string): {
   from: string;
   to: string;

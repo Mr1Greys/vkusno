@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import {
   resolveRangeFromSearchParams,
   previousPeriodSameLength,
+  countDaysInclusive,
 } from "@/lib/admin/date-range";
 import {
   getActiveOrders,
@@ -66,7 +67,7 @@ export default async function AdminDashboard({
   ] = await Promise.all([
     getRangeStats(prisma, from, to),
     getPeriodOverviewCompare(prisma, from, to, prev.from, prev.to),
-    getRevenueByDayCatalog(prisma),
+    getRevenueByDayCatalog(prisma, from, to),
     getActiveOrders(prisma, 18),
     getClientSummary(prisma),
     prisma.order.findMany({
@@ -90,6 +91,8 @@ export default async function AdminDashboard({
     const q = p === "custom" ? `?from=${from}&to=${to}` : `?preset=${p}`;
     return `/admin${q}`;
   };
+
+  const chartDayCount = countDaysInclusive(from, to);
 
   return (
     <div className="space-y-8">
@@ -249,9 +252,17 @@ export default async function AdminDashboard({
         {/* Блок 2 — график */}
         <div className="rounded-xl border border-border bg-surface-1 p-4 shadow-sm lg:col-span-2 lg:p-5">
           <h2 className="font-display text-lg font-bold text-text">
-            Выручка по дням (30 дней)
+            Выручка по дням
+            <span className="ml-1 text-base font-medium text-text-2">
+              · {from === to ? from : `${from} — ${to}`}
+            </span>
           </h2>
-          <DashboardRevenueChart data={chartSeries} />
+          <DashboardRevenueChart
+            data={chartSeries}
+            from={from}
+            to={to}
+            dayCount={chartDayCount}
+          />
         </div>
 
         {/* Блок 3 — активные */}

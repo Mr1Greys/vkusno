@@ -4,6 +4,8 @@ import {
   addDaysIsoMoscow,
   dayEndMoscow,
   dayStartMoscow,
+  enumerateDaysInclusive,
+  isoDateFromDbDate,
   todayIsoMoscow,
 } from "@/lib/admin/date-range";
 
@@ -266,14 +268,15 @@ export async function getPeriodOverviewCompare(
   };
 }
 
-/** Последние 30 календарных дней по Москве: выручка строк по каталогу. */
+/** Выручка по календарным дням (МСК) за выбранный период, разбивка по каталогу. */
 export async function getRevenueByDayCatalog(
-  prisma: PrismaClient
+  prisma: PrismaClient,
+  fromIso: string,
+  toIso: string
 ): Promise<RevenueChartPoint[]> {
-  const today = todayIsoMoscow();
-  const from = addDaysIsoMoscow(today, -29);
-  const start = dayStartMoscow(from);
-  const end = dayEndMoscow(today);
+  const start = dayStartMoscow(fromIso);
+  const end = dayEndMoscow(toIso);
+  const days = enumerateDaysInclusive(fromIso, toIso);
 
   const rows = await prisma.$queryRaw<
     Array<{ d: Date; catalog: string; revenue: bigint }>
@@ -293,13 +296,11 @@ export async function getRevenueByDayCatalog(
     ORDER BY 1 ASC
   `);
 
-  const byDay = new Map<string, { bakery: number; restaurant: number }>();
-  for (let i = 0; i < 30; i++) {
-    const iso = addDaysIsoMoscow(from, i);
-    byDay.set(iso, { bakery: 0, restaurant: 0 });
-  }
+  const byDay = new Map<string, { bakery: number; restaurant: number }>(
+    days.map((iso) => [iso, { bakery: 0, restaurant: 0 }])
+  );
   for (const r of rows) {
-    const iso = r.d.toISOString().slice(0, 10);
+    const iso = isoDateFromDbDate(r.d);
     const cur = byDay.get(iso) ?? { bakery: 0, restaurant: 0 };
     const v = Number(r.revenue);
     if (r.catalog === "BAKERY") cur.bakery += v;
@@ -307,21 +308,18 @@ export async function getRevenueByDayCatalog(
     byDay.set(iso, cur);
   }
 
-  const points: RevenueChartPoint[] = [];
-  for (let i = 0; i < 30; i++) {
-    const iso = addDaysIsoMoscow(from, i);
+  return days.map((iso) => {
     const { bakery, restaurant } = byDay.get(iso) ?? {
       bakery: 0,
       restaurant: 0,
     };
-    points.push({
+    return {
       date: iso,
       bakery,
       restaurant,
       total: bakery + restaurant,
-    });
-  }
-  return points;
+    };
+  });
 }
 
 /** Активные заказы (не завершены и не отменены). */
