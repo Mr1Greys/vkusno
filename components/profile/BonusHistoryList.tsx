@@ -1,5 +1,6 @@
 "use client";
 
+import { ArrowDownRight, ArrowUpRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   formatBonusHistoryDate,
@@ -51,27 +52,50 @@ export function BonusHistoryList({
                   key={row.id}
                   className="rounded-[20px] border border-border/50 bg-white p-4 shadow-[0_4px_20px_-12px_rgba(74,60,47,0.18)]"
                 >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0 pr-1">
-                      <p className="font-semibold leading-snug text-text">{title}</p>
-                      <p className="mt-0.5 text-[13px] leading-snug text-text-2">{subtitle}</p>
-                      <p className="mt-3 text-[12px] text-text-3">
-                        <time dateTime={row.createdAt}>
-                          {formatBonusHistoryDate(row.createdAt)}
-                        </time>
-                      </p>
-                    </div>
-                    <div className="shrink-0 text-right">
-                      <p
-                        className={cn(
-                          "text-[1.35rem] font-bold leading-none tabular-nums tracking-tight",
-                          isDebit ? "text-error" : "text-success"
-                        )}
-                      >
-                        {isDebit ? "−" : "+"}
-                        {formatBonusPoints(row.amount)}
-                      </p>
-                      <p className="mt-1 text-[11px] font-medium text-text-3">бонусов</p>
+                  <div className="flex gap-3.5">
+                    <span
+                      className={cn(
+                        "flex h-11 w-11 shrink-0 items-center justify-center rounded-full",
+                        isDebit
+                          ? "bg-error/[0.08] text-error"
+                          : "bg-success/[0.1] text-success"
+                      )}
+                      aria-hidden
+                    >
+                      {isDebit ? (
+                        <ArrowDownRight className="h-5 w-5" strokeWidth={2} />
+                      ) : (
+                        <ArrowUpRight className="h-5 w-5" strokeWidth={2} />
+                      )}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0 pr-1">
+                          <p className="text-[15px] font-medium leading-snug text-text">
+                            {title}
+                          </p>
+                          <p className="mt-0.5 text-[13px] font-normal leading-snug text-text-2/90">
+                            {subtitle}
+                          </p>
+                          <p className="mt-3 text-[12px] font-normal text-text-3">
+                            <time dateTime={row.createdAt}>
+                              {formatBonusHistoryDate(row.createdAt)}
+                            </time>
+                          </p>
+                        </div>
+                        <div className="shrink-0 text-right">
+                          <p
+                            className={cn(
+                              "text-[1.35rem] font-bold leading-none tabular-nums tracking-tight",
+                              isDebit ? "text-error" : "text-success"
+                            )}
+                          >
+                            {isDebit ? "−" : "+"}
+                            {formatBonusPoints(row.amount)}
+                          </p>
+                          <p className="mt-1 text-[11px] font-normal text-text-3">бонусов</p>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </li>
