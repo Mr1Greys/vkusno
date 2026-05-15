@@ -2,16 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import {
-  User,
-  LogOut,
-  ArrowDownRight,
-  ArrowUpRight,
-  ChevronRight,
-  History,
-  Package,
-} from "lucide-react";
+import { User, LogOut, ChevronRight, Package } from "lucide-react";
 import { LoyaltyCard } from "@/components/profile/LoyaltyCard";
+import { BonusHistoryList } from "@/components/profile/BonusHistoryList";
 import { useAuthStore } from "@/store/authStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,7 +16,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { cn, formatPrice } from "@/lib/utils";
-import { bonusTypeLabel } from "@/lib/bonus-type-labels";
 
 interface Order {
   id: string;
@@ -38,13 +30,9 @@ interface BonusRow {
   type: string;
   amount: number;
   description: string | null;
+  orderId: string | null;
   createdAt: string;
 }
-
-function formatBonusPoints(n: number): string {
-  return new Intl.NumberFormat("ru-RU").format(n);
-}
-
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -68,6 +56,7 @@ export default function ProfilePage() {
   const [profileMessage, setProfileMessage] = useState("");
   const [profileSaving, setProfileSaving] = useState(false);
   const [editContacts, setEditContacts] = useState(false);
+  const [bonusPercent, setBonusPercent] = useState(5);
 
   useEffect(() => {
     if (user) {
@@ -77,10 +66,17 @@ export default function ProfilePage() {
       Promise.all([
         fetch("/api/profile/orders").then((r) => r.json()),
         fetch("/api/profile/bonus-history").then((r) => r.json()),
+        fetch("/api/shop/settings")
+          .then((r) => (r.ok ? r.json() : null))
+          .catch(() => null),
       ])
-        .then(([ordersData, bonusData]) => {
+        .then(([ordersData, bonusData, settings]) => {
           setOrders(Array.isArray(ordersData) ? ordersData : []);
           setBonusRows(Array.isArray(bonusData) ? bonusData : []);
+          if (settings?.bonus_percent) {
+            const p = parseInt(String(settings.bonus_percent), 10);
+            if (!Number.isNaN(p)) setBonusPercent(p);
+          }
         })
         .finally(() => setLoading(false));
     } else {
@@ -475,83 +471,11 @@ export default function ProfilePage() {
         </DialogContent>
       </Dialog>
 
-      <section className="relative mb-8 overflow-hidden rounded-[28px] border border-border/60 bg-surface-1 shadow-card ring-1 ring-black/[0.03]">
-        <div className="relative p-5 sm:p-6">
-          <div className="mb-4 flex items-center gap-2">
-              <History className="h-4 w-4 text-coffee" strokeWidth={2} />
-              <h3 className="font-display text-base font-bold text-text">
-                История операций
-              </h3>
-            </div>
-            {bonusRows.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-border/80 bg-white/50 px-4 py-10 text-center">
-                <p className="text-[15px] font-medium text-text">
-                  Пока без движений
-                </p>
-                <p className="mx-auto mt-2 max-w-xs text-sm leading-relaxed text-text-2">
-                  После заказов здесь появятся начисления и списания бонусов.
-                </p>
-              </div>
-            ) : (
-              <ul className="max-h-[min(420px,55vh)] space-y-2 overflow-y-auto pr-1">
-                {bonusRows.map((row) => {
-                  const spent = row.type === "SPENT";
-                  return (
-                    <li
-                      key={row.id}
-                      className="flex gap-3 rounded-2xl border border-border/40 bg-white/70 p-4 shadow-sm backdrop-blur-sm transition-colors hover:bg-white"
-                    >
-                      <span
-                        className={cn(
-                          "mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ring-1",
-                          spent
-                            ? "bg-error/[0.07] text-error ring-error/15"
-                            : "bg-success/[0.08] text-success ring-success/20"
-                        )}
-                      >
-                        {spent ? (
-                          <ArrowDownRight className="h-4 w-4" strokeWidth={2} />
-                        ) : (
-                          <ArrowUpRight className="h-4 w-4" strokeWidth={2} />
-                        )}
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-start justify-between gap-3">
-                          <p className="font-semibold text-text">
-                            {bonusTypeLabel(row.type)}
-                          </p>
-                          <span
-                            className={cn(
-                              "shrink-0 text-[15px] font-bold tabular-nums",
-                              spent ? "text-error" : "text-success"
-                            )}
-                          >
-                            {spent ? "−" : "+"}
-                            {formatBonusPoints(row.amount)}
-                          </span>
-                        </div>
-                        {row.description ? (
-                          <p className="mt-1 text-[13px] leading-snug text-text-2">
-                            {row.description}
-                          </p>
-                        ) : null}
-                        <p className="mt-2 text-[11px] font-medium uppercase tracking-[0.12em] text-text-3">
-                          {new Date(row.createdAt).toLocaleString("ru", {
-                            day: "numeric",
-                            month: "short",
-                            year: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </p>
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-        </div>
-      </section>
+      <BonusHistoryList
+        className="mb-8"
+        rows={bonusRows}
+        bonusPercent={bonusPercent}
+      />
 
       {/* Заказы */}
       <section>

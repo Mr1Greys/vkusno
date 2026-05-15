@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 const PAGE_SIZE_DEFAULT = 50;
 const PAGE_SIZE_MAX = 100;
 
-const BONUS_TYPES: BonusType[] = ["EARNED", "SPENT", "MANUAL", "REFERRAL"];
+const BONUS_TYPES: BonusType[] = ["EARNED", "SPENT", "MANUAL"];
 
 export async function GET(request: Request) {
   const session = await getSession();

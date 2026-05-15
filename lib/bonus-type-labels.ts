@@ -4,7 +4,6 @@ const LABELS: Record<BonusType, string> = {
   EARNED: "Начисление",
   SPENT: "Списание",
   MANUAL: "Вручную",
-  REFERRAL: "Реферал",
 };
 
 export function bonusTypeLabel(type: string): string {
