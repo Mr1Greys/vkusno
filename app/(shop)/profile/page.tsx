@@ -4,18 +4,14 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   User,
-  Pencil,
   LogOut,
-  Gift,
   ArrowDownRight,
   ArrowUpRight,
-  Sparkles,
   ChevronRight,
   History,
   Package,
-  ScanLine,
-  Store,
 } from "lucide-react";
+import { LoyaltyCard } from "@/components/profile/LoyaltyCard";
 import { useAuthStore } from "@/store/authStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,7 +24,6 @@ import {
 } from "@/components/ui/dialog";
 import { cn, formatPrice } from "@/lib/utils";
 import { bonusTypeLabel } from "@/lib/bonus-type-labels";
-import QRCode from "react-qr-code";
 
 interface Order {
   id: string;
@@ -50,110 +45,6 @@ function formatBonusPoints(n: number): string {
   return new Intl.NumberFormat("ru-RU").format(n);
 }
 
-function LoyaltyQrBlock() {
-  const [token, setToken] = useState<string | null>(null);
-  const [phase, setPhase] = useState<"loading" | "ready" | "unavailable">(
-    "loading"
-  );
-
-  useEffect(() => {
-    let cancelled = false;
-    fetch("/api/profile/loyalty-qr")
-      .then((r) => (r.ok ? r.json() : Promise.reject()))
-      .then((d: { token?: string }) => {
-        if (cancelled) return;
-        if (d.token) {
-          setToken(d.token);
-          setPhase("ready");
-        } else {
-          setPhase("unavailable");
-        }
-      })
-      .catch(() => {
-        if (!cancelled) setPhase("unavailable");
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  if (phase === "unavailable") return null;
-
-  const qrFg = "#2a2118";
-  const qrBg = "#ffffff";
-
-  return (
-    <div className="relative isolate w-full">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -inset-px rounded-[26px] bg-gradient-to-br from-white/90 via-white/40 to-accent/[0.12] opacity-90 blur-[1px]"
-      />
-      <div className="relative overflow-hidden rounded-[24px] border border-white/70 bg-white/[0.72] p-1 shadow-[0_24px_48px_-28px_rgba(74,60,47,0.35),inset_0_1px_0_rgba(255,255,255,0.85)] ring-1 ring-brand/[0.08] backdrop-blur-md">
-        <div className="pointer-events-none absolute -right-10 -top-10 h-28 w-28 rounded-full bg-accent/15 blur-2xl" />
-        <div className="pointer-events-none absolute -bottom-8 -left-6 h-24 w-24 rounded-full bg-brand/[0.07] blur-2xl" />
-
-        <div className="relative space-y-4 p-4 sm:p-5">
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0 space-y-1">
-              <div className="inline-flex items-center gap-1.5 rounded-full bg-brand/[0.06] px-2.5 py-1 ring-1 ring-brand/10">
-                <Store className="h-3.5 w-3.5 shrink-0 text-brand" strokeWidth={2} aria-hidden />
-                <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-coffee">
-                  На кассе
-                </span>
-              </div>
-              <p className="font-display text-[17px] font-bold leading-snug tracking-tight text-text sm:text-lg">
-                QR для бонусов
-              </p>
-              <p className="text-[12px] leading-relaxed text-text-2 sm:text-[13px]">
-                Кассир отсканирует код — баллы начислятся на этот счёт.
-              </p>
-            </div>
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-brand to-[#5c4a38] text-[#FFFCF9] shadow-[0_10px_24px_-8px_rgba(74,60,47,0.55)] ring-2 ring-white/30">
-              <ScanLine className="h-5 w-5" strokeWidth={2} aria-hidden />
-            </span>
-          </div>
-
-          <div className="relative mx-auto w-fit">
-            <div
-              aria-hidden
-              className="absolute inset-0 -m-3 rounded-3xl bg-[radial-gradient(ellipse_at_center,_rgba(245,166,35,0.08)_0%,_transparent_70%)]"
-            />
-            {phase === "loading" ? (
-              <div
-                className="relative flex aspect-square w-[220px] flex-col items-center justify-center gap-3 rounded-2xl border border-border/40 bg-white/90 p-6 shadow-inner"
-                role="status"
-                aria-label="Загрузка QR-кода"
-              >
-                <div className="h-10 w-10 animate-pulse rounded-xl bg-surface-2" />
-                <div className="h-3 w-24 animate-pulse rounded-full bg-surface-2" />
-                <div className="h-3 w-32 animate-pulse rounded-full bg-surface-2/80" />
-              </div>
-            ) : token ? (
-              <div className="relative rounded-2xl border border-border/35 bg-white p-3 shadow-[inset_0_2px_12px_rgba(74,60,47,0.04),0_12px_32px_-18px_rgba(42,33,24,0.25)] sm:p-3.5">
-                <div className="flex justify-center">
-                  <QRCode
-                    value={token}
-                    size={196}
-                    level="H"
-                    bgColor={qrBg}
-                    fgColor={qrFg}
-                  />
-                </div>
-              </div>
-            ) : null}
-          </div>
-
-          <div className="flex items-center gap-2.5 rounded-2xl border border-border/30 bg-cream/50 px-3 py-2.5 text-[11px] leading-snug text-text-2 sm:text-[12px]">
-            <Gift className="h-4 w-4 shrink-0 text-accent" strokeWidth={2} aria-hidden />
-            <span className="min-w-0 break-words">
-              Покажите экран кассиру перед оплатой — так бонусы привяжутся к заказу.
-            </span>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -504,31 +395,13 @@ export default function ProfilePage() {
         </Button>
       </header>
 
-      {/* Карточка пользователя: имя + вход в редактирование контактов */}
-      <section className="relative mb-6 overflow-hidden rounded-[28px] border border-border/60 bg-surface-1 p-5 shadow-[0_28px_70px_-38px_rgba(74,60,47,0.35)] ring-1 ring-black/[0.03] sm:p-6">
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex min-w-0 flex-1 items-center gap-3 sm:gap-4">
-            <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-brand text-[1.35rem] font-bold text-[#FFFCF9] shadow-inner">
-              {(user.name?.[0] ?? user.phone?.[0] ?? "?").toUpperCase()}
-            </span>
-            <div className="min-w-0">
-              <p className="font-display text-xl font-bold leading-tight text-text">
-                {user.name?.trim() || "Клиент"}
-              </p>
-            </div>
-          </div>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="h-10 shrink-0 gap-1.5 rounded-full border-border/80 px-3 text-[13px] font-semibold text-coffee sm:h-11 sm:gap-2 sm:px-4 sm:text-[14px]"
-            onClick={openContactDialog}
-          >
-            <Pencil className="h-4 w-4 shrink-0" aria-hidden />
-            Редактировать
-          </Button>
-        </div>
-      </section>
+      <LoyaltyCard
+        className="mb-6"
+        name={user.name || ""}
+        phone={user.phone}
+        bonusPoints={user.bonusPoints}
+        onEditContacts={openContactDialog}
+      />
 
       <Dialog open={editContacts} onOpenChange={(open) => !open && cancelEditContacts()}>
         <DialogContent className="max-h-[min(90vh,720px)] gap-0 overflow-y-auto rounded-[24px] border-border/70 p-0 sm:max-w-md">
@@ -537,8 +410,7 @@ export default function ProfilePage() {
               Контакты
             </DialogTitle>
             <p className="pt-2 text-[13px] leading-relaxed text-text-2">
-              Имя, почта и телефон не показываем на главной странице кабинета — только
-              здесь. Подтверждение по SMS не требуется.
+              Измените имя, почту или телефон. Подтверждение по SMS не требуется.
             </p>
           </DialogHeader>
           <form onSubmit={handleSaveProfile} className="space-y-5 px-6 pb-6 pt-5">
@@ -603,45 +475,9 @@ export default function ProfilePage() {
         </DialogContent>
       </Dialog>
 
-      {/* Бонусы */}
-      <section className="relative mb-8 overflow-hidden rounded-[28px] border border-accent/25 bg-gradient-to-br from-[#FFFCF9] via-cream to-accent/[0.08] shadow-[0_32px_80px_-44px_rgba(245,166,35,0.45)] ring-1 ring-brand/10">
-        <div className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full bg-accent/20 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-12 -left-8 h-32 w-32 rounded-full bg-brand/10 blur-2xl" />
-
-        <div className="relative p-6 md:p-8">
-          <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between lg:gap-10 xl:gap-12">
-            <div className="min-w-0 w-full flex-1 space-y-5 lg:max-w-2xl xl:max-w-3xl">
-              <div className="flex flex-wrap items-start justify-between gap-4">
-                <div className="inline-flex items-center gap-2 rounded-full bg-white/85 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-coffee shadow-sm ring-1 ring-border/35">
-                  <Sparkles className="h-3.5 w-3.5 text-accent" aria-hidden />
-                  Бонусная программа
-                </div>
-                <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-brand to-[#5c4a38] text-[#FFFCF9] shadow-[0_14px_32px_-10px_rgba(74,60,47,0.5)] ring-2 ring-white/40">
-                  <Gift className="h-6 w-6" strokeWidth={1.75} aria-hidden />
-                </span>
-              </div>
-
-              <div>
-                <p className="text-[13px] font-medium text-text-2">Баланс</p>
-                <p className="mt-1 font-display text-4xl font-bold tabular-nums tracking-tight text-brand md:text-5xl">
-                  {formatBonusPoints(user.bonusPoints)}
-                </p>
-                <p className="mt-1 text-sm text-text-2">бонусов на счёте</p>
-              </div>
-
-              <p className="max-w-xl text-[13px] leading-relaxed text-text-2 md:text-[14px] md:leading-relaxed lg:max-w-none">
-                1 бонус = 1 ₽ при оплате заказа. Начисляем от суммы покупки по
-                правилам программы.
-              </p>
-            </div>
-
-            <div className="mx-auto w-full max-w-[300px] shrink-0 lg:mx-0 lg:w-[300px]">
-              <LoyaltyQrBlock />
-            </div>
-          </div>
-
-          <div className="relative mt-8 border-t border-border/50 pt-6">
-            <div className="mb-4 flex items-center gap-2">
+      <section className="relative mb-8 overflow-hidden rounded-[28px] border border-border/60 bg-surface-1 shadow-card ring-1 ring-black/[0.03]">
+        <div className="relative p-5 sm:p-6">
+          <div className="mb-4 flex items-center gap-2">
               <History className="h-4 w-4 text-coffee" strokeWidth={2} />
               <h3 className="font-display text-base font-bold text-text">
                 История операций
@@ -714,7 +550,6 @@ export default function ProfilePage() {
                 })}
               </ul>
             )}
-          </div>
         </div>
       </section>
 
