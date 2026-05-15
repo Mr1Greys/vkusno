@@ -8,9 +8,8 @@ const categories = [
   { name: "Блины", slug: "bliny", sortOrder: 0 },
   { name: "Несладкая выпечка", slug: "savory-pastry", sortOrder: 1 },
   { name: "Сладкая выпечка", slug: "sweet-pastry", sortOrder: 2 },
-  { name: "Ланч-бокс", slug: "lunchbox", sortOrder: 3 },
-  { name: "Десерты", slug: "desserts", sortOrder: 4 },
-  { name: "Напитки", slug: "drinks", sortOrder: 5 },
+  { name: "Десерты", slug: "desserts", sortOrder: 3 },
+  { name: "Напитки", slug: "drinks", sortOrder: 4 },
 ];
 
 type ProductInput = {
@@ -87,15 +86,7 @@ const products: Record<string, ProductInput[]> = {
     { name: "Сырник", price: 12000, weight: "100 г", imageUrl: "/images/products/bakery/sweet-pastry/syrnik.webp" },
     { name: "Штрудель", price: 21000, weight: "252.9 г", imageUrl: "/images/products/bakery/sweet-pastry/shtrudel.webp" },
   ],
-  "lunchbox": [
-    { name: "Солянка", price: 32000, weight: "300 г" },
-    { name: "Оливье", price: 29000, weight: "200 г" },
-    { name: "Куриный суп с лапшой", price: 28000, weight: "300 г" },
-    { name: "Котлета куриная с пюре", price: 36000, weight: "350 г" },
-    { name: "Витаминный салат", price: 21000, weight: "150 г" },
-    { name: "Борщ", price: 32000, weight: "300 г" },
-  ],
-  "desserts": [
+  desserts: [
     { name: "Донат ванильный", price: 16000, weight: "111.6 г" },
     { name: "Донат Карамельный", price: 16000, weight: "111.6 г" },
     { name: "Картошка", price: 14000, weight: "120 г" },
@@ -184,14 +175,16 @@ async function main() {
     }
   }
 
-  const legacyFastfood = await prisma.category.findUnique({
-    where: { slug: "fastfood" },
-    select: { id: true },
-  });
-  if (legacyFastfood) {
+  for (const legacySlug of ["fastfood", "lunchbox"] as const) {
+    const legacyCategory = await prisma.category.findUnique({
+      where: { slug: legacySlug },
+      select: { id: true },
+    });
+    if (!legacyCategory) continue;
+
     const legacyIds = (
       await prisma.product.findMany({
-        where: { categoryId: legacyFastfood.id },
+        where: { categoryId: legacyCategory.id },
         select: { id: true },
       })
     ).map((x) => x.id);
@@ -200,9 +193,10 @@ async function main() {
       await prisma.product.deleteMany({ where: { id: { in: legacyIds } } });
     }
     await prisma.category.update({
-      where: { id: legacyFastfood.id },
+      where: { id: legacyCategory.id },
       data: { isActive: false },
     });
+    console.log(`Deactivated legacy category: ${legacySlug}`);
   }
 
   let restaurantSort = 0;

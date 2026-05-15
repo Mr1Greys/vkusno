@@ -8,7 +8,6 @@ import {
   Croissant,
   CupSoda,
   Disc3,
-  Package,
   Pizza,
   Salad,
   Soup,
@@ -135,16 +134,6 @@ function HotDishesIcon({ className, strokeWidth }: CategoryIconProps) {
   );
 }
 
-function LunchboxIcon({ className, strokeWidth }: CategoryIconProps) {
-  return (
-    <Package
-      className={cn(CATEGORY_ORB_SVG_CLASS, className)}
-      strokeWidth={strokeWidth ?? STROKE_ORB}
-      aria-hidden
-    />
-  );
-}
-
 function DrinksIcon({ className, strokeWidth }: CategoryIconProps) {
   return (
     <CupSoda
@@ -162,7 +151,6 @@ const CATEGORY_ORB_ICONS: Record<string, FC<CategoryIconProps>> = {
   "sweet-pastry": SweetPastryIcon,
   /** Слаги из Prisma seed / админки */
   fastfood: SnacksIcon,
-  lunchbox: LunchboxIcon,
   drinks: DrinksIcon,
   mangal: MangalIcon,
   salads: SaladsIcon,
