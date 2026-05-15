@@ -279,16 +279,20 @@ function AdminBonusesInner() {
       </div>
 
       <div className="grid gap-8 lg:grid-cols-2">
-        <section className="space-y-4 rounded-lg border border-border bg-surface-1 p-4">
-          <div className="flex items-center gap-2 font-semibold">
-            <Camera className="h-4 w-4" />
-            Сканер QR
-          </div>
-          <p className="text-xs leading-relaxed text-text-2">
-            Нажмите кнопку, чтобы открыть окно с камерой. Наведите её на QR из раздела «Бонусы» в
-            приложении клиента — это не банковский платёжный код.
-          </p>
-          <div className="flex flex-wrap items-center gap-4">
+        <section className="rounded-lg border border-border bg-surface-1 p-3 sm:p-3.5">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <div className="flex min-w-0 flex-1 items-center gap-2.5 sm:gap-3">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand/10 text-brand">
+                <Camera className="h-4 w-4" aria-hidden />
+              </span>
+              <div className="min-w-0 space-y-0.5">
+                <h2 className="text-sm font-semibold leading-tight text-text">Сканер QR</h2>
+                <p className="text-xs leading-snug text-text-2">
+                  Откройте камеру и наведите на QR из «Бонусы» в приложении клиента — не банковский
+                  платёжный код.
+                </p>
+              </div>
+            </div>
             <button
               type="button"
               onClick={() => {
@@ -296,26 +300,26 @@ function AdminBonusesInner() {
                 setScanMessage("");
                 setScannerModalOpen(true);
               }}
-              className="group flex h-[4.25rem] w-[4.25rem] shrink-0 items-center justify-center rounded-2xl border border-border/90 bg-white shadow-[0_6px_22px_-10px_rgba(74,60,47,0.4)] transition hover:-translate-y-0.5 hover:border-brand/40 hover:shadow-lg active:translate-y-0 active:scale-[0.97]"
+              className="group flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand/12 text-brand shadow-sm transition hover:bg-brand/20 hover:shadow-md active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
               aria-label="Открыть сканер QR-кода"
             >
               <ScanLine
-                className="h-[2.15rem] w-[2.15rem] text-brand transition group-hover:text-brand-hover"
+                className="h-5 w-5 transition group-hover:scale-105"
                 strokeWidth={2.25}
                 aria-hidden
               />
             </button>
-            {scanMessage && !scannerModalOpen ? (
-              <p
-                className={cn(
-                  "min-w-0 flex-1 text-sm",
-                  qrVerify === "error" ? "text-destructive" : "text-text-2"
-                )}
-              >
-                {scanMessage}
-              </p>
-            ) : null}
           </div>
+          {scanMessage && !scannerModalOpen ? (
+            <p
+              className={cn(
+                "mt-2 border-t border-border/50 pt-2 text-xs leading-snug",
+                qrVerify === "error" ? "text-destructive" : "text-text-2"
+              )}
+            >
+              {scanMessage}
+            </p>
+          ) : null}
         </section>
 
         <section className="space-y-4 rounded-lg border border-border bg-surface-1 p-4">
