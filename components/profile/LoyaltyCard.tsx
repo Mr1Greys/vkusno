@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Coins, Croissant, Pencil, QrCode, ScanLine, X } from "lucide-react";
 import QRCode from "react-qr-code";
 import { cn } from "@/lib/utils";
+import { encodeLoyaltyQrPayload } from "@/lib/extract-loyalty-qr-token";
 
 function formatBonusPoints(n: number): string {
   return new Intl.NumberFormat("ru-RU").format(n);
@@ -116,7 +117,7 @@ export function LoyaltyCard({
       <div
         className={cn(
           "relative transition-[min-height] duration-300",
-          showQr ? "min-h-[340px] sm:min-h-[360px]" : "min-h-[200px] sm:min-h-[210px]"
+          showQr ? "min-h-[292px] sm:min-h-[300px]" : "min-h-[200px] sm:min-h-[210px]"
         )}
         style={{ perspective: "1200px" }}
       >
@@ -230,31 +231,33 @@ export function LoyaltyCard({
           {/* Back — QR */}
           <article
             className={cn(
-              "absolute inset-0 flex flex-col overflow-hidden rounded-[24px] border border-[#e8dfd4]/90 bg-[#fcf7f2] shadow-[0_20px_50px_-28px_rgba(74,60,47,0.35)]",
+              "absolute inset-0 flex h-full min-h-[inherit] flex-col overflow-hidden rounded-[24px] border border-[#e8dfd4]/90 bg-[#fcf7f2] shadow-[0_20px_50px_-28px_rgba(74,60,47,0.35)]",
               "[backface-visibility:hidden] [transform:rotateY(180deg)]"
             )}
           >
-            <div className="flex items-center justify-between gap-3 border-b border-[#e0d5c8]/80 px-4 py-3 sm:px-5">
-              <div className="flex items-center gap-2">
-                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand/10 text-brand">
-                  <ScanLine className="h-4 w-4" strokeWidth={2} aria-hidden />
+            <div className="relative z-10 flex shrink-0 items-center justify-between gap-2 border-b border-[#e0d5c8]/80 bg-[#fcf7f2] px-3.5 py-2.5 sm:px-4">
+              <div className="flex min-w-0 items-center gap-2">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand/10 text-brand">
+                  <ScanLine className="h-3.5 w-3.5" strokeWidth={2} aria-hidden />
                 </span>
-                <div>
-                  <p className="font-display text-sm font-bold text-text">QR для бонусов</p>
-                  <p className="text-[11px] text-coffee">Покажите кассиру</p>
+                <div className="min-w-0">
+                  <p className="font-display text-sm font-bold leading-tight text-text">
+                    QR для бонусов
+                  </p>
+                  <p className="text-[11px] leading-snug text-coffee">Покажите кассиру</p>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => setShowQr(false)}
-                className="flex h-9 w-9 items-center justify-center rounded-full text-coffee transition hover:bg-white/70 hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-coffee transition hover:bg-white/70 hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                 aria-label="Вернуться к карточке"
               >
-                <X className="h-5 w-5" aria-hidden />
+                <X className="h-4 w-4" aria-hidden />
               </button>
             </div>
 
-            <div className="flex min-h-[240px] flex-1 flex-col items-center justify-center gap-3 px-4 py-4 sm:min-h-[260px] sm:px-5">
+            <div className="flex min-h-0 flex-1 items-center justify-center px-3.5 py-3 sm:px-4">
               {qrPhase === "error" && !token ? (
                 <div className="flex flex-col items-center gap-3 text-center">
                   <p className="text-sm text-error">Не удалось загрузить QR. Попробуйте ещё раз.</p>
@@ -267,24 +270,32 @@ export function LoyaltyCard({
                   </button>
                 </div>
               ) : token ? (
-                <div className="rounded-2xl border border-[#e0d5c8]/50 bg-white p-3 shadow-inner">
-                  <QRCode value={token} size={200} level="H" bgColor={qrBg} fgColor={qrFg} />
+                <div className="w-[min(100%,172px)] rounded-xl border border-[#e0d5c8]/55 bg-white p-2 shadow-sm">
+                  <QRCode
+                    value={encodeLoyaltyQrPayload(token)}
+                    size={156}
+                    level="M"
+                    bgColor={qrBg}
+                    fgColor={qrFg}
+                    className="h-auto w-full"
+                  />
                 </div>
               ) : (
                 <div
-                  className="flex aspect-square w-[min(100%,220px)] flex-col items-center justify-center gap-3 rounded-2xl border border-[#e0d5c8]/60 bg-white/90"
+                  className="flex aspect-square w-[min(100%,172px)] flex-col items-center justify-center gap-2 rounded-xl border border-[#e0d5c8]/55 bg-white/90 p-2"
                   role="status"
                   aria-label="Загрузка QR-кода"
                   aria-busy="true"
                 >
-                  <div className="h-10 w-10 animate-pulse rounded-xl bg-surface-2" />
-                  <div className="h-3 w-28 animate-pulse rounded-full bg-surface-2" />
+                  <div className="h-8 w-8 animate-pulse rounded-lg bg-surface-2" />
+                  <div className="h-2.5 w-20 animate-pulse rounded-full bg-surface-2" />
                 </div>
               )}
-              <p className="max-w-[260px] text-center text-[12px] leading-relaxed text-coffee">
-                Кассир отсканирует код — бонусы начислятся или спишутся с вашего счёта.
-              </p>
             </div>
+
+            <p className="shrink-0 border-t border-[#e0d5c8]/55 bg-[#fcf7f2] px-3.5 py-2.5 text-center text-[11px] leading-snug text-coffee sm:px-4">
+              Кассир отсканирует код — бонусы начислятся или спишутся с вашего счёта.
+            </p>
           </article>
         </div>
       </div>

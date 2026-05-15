@@ -1,5 +1,9 @@
 import { SignJWT, jwtVerify } from "jose";
-import { getLoyaltyQrSecretBytes } from "@/lib/jwt-secret";
+import {
+  getLoyaltyQrSecretBytes,
+  getLoyaltyQrVerifySecretBytesList,
+} from "@/lib/jwt-secret";
+import { extractLoyaltyQrJwt } from "@/lib/extract-loyalty-qr-token";
 
 const LOYALTY_PURPOSE = "loyalty_qr" as const;
 
@@ -13,17 +17,31 @@ export async function signLoyaltyQrToken(userId: string): Promise<string> {
     .sign(secret);
 }
 
+export function normalizeLoyaltyQrToken(raw: string): string | null {
+  return extractLoyaltyQrJwt(raw);
+}
+
 export async function verifyLoyaltyQrToken(
-  token: string
+  raw: string
 ): Promise<{ userId: string } | null> {
-  try {
-    const secret = getLoyaltyQrSecretBytes();
-    const { payload } = await jwtVerify(token, secret);
-    if (payload.purpose !== LOYALTY_PURPOSE || typeof payload.sub !== "string") {
-      return null;
+  const token = normalizeLoyaltyQrToken(raw);
+  if (!token) return null;
+
+  const secrets = getLoyaltyQrVerifySecretBytesList();
+
+  for (const secret of secrets) {
+    try {
+      const { payload } = await jwtVerify(token, secret, {
+        clockTolerance: 120,
+      });
+      if (payload.purpose !== LOYALTY_PURPOSE || typeof payload.sub !== "string") {
+        continue;
+      }
+      return { userId: payload.sub };
+    } catch {
+      continue;
     }
-    return { userId: payload.sub };
-  } catch {
-    return null;
   }
+
+  return null;
 }

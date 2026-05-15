@@ -27,3 +27,29 @@ export function getLoyaltyQrSecretBytes(): Uint8Array {
   }
   return getJwtSecretBytes();
 }
+
+/**
+ * Секреты для проверки QR: LOYALTY_QR_SECRET и JWT_SECRET (если различаются).
+ * Нужно, чтобы старые QR, подписанные до появления LOYALTY_QR_SECRET, продолжали работать.
+ */
+export function getLoyaltyQrVerifySecretBytesList(): Uint8Array[] {
+  const enc = new TextEncoder();
+  const seen = new Set<string>();
+  const out: Uint8Array[] = [];
+
+  const add = (raw: string | undefined) => {
+    const s = raw?.trim();
+    if (!s || s.length < 32 || seen.has(s)) return;
+    seen.add(s);
+    out.push(enc.encode(s));
+  };
+
+  add(process.env.LOYALTY_QR_SECRET);
+  add(process.env.JWT_SECRET);
+
+  if (out.length === 0) {
+    out.push(getJwtSecretBytes());
+  }
+
+  return out;
+}
