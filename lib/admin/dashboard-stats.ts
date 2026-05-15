@@ -18,13 +18,6 @@ export type RevenueChartPoint = {
   total: number;
 };
 
-export type TopProductRow = {
-  productId: string;
-  name: string;
-  quantity: number;
-  revenue: number;
-};
-
 export type ActiveOrderRow = {
   id: string;
   orderNumber: string;
@@ -357,108 +350,6 @@ export async function getActiveOrders(prisma: PrismaClient, take = 18) {
     waitMinutes: Math.max(0, Math.floor((now - o.createdAt.getTime()) / 60000)),
     stageLabel: activeStageLabel(o.status),
   }));
-}
-
-async function attachProductNames(
-  prisma: PrismaClient,
-  rows: Array<{ productId: string; quantity: bigint | number; revenue: bigint | number }>
-): Promise<TopProductRow[]> {
-  if (rows.length === 0) return [];
-  const ids = rows.map((r) => r.productId);
-  const products = await prisma.product.findMany({
-    where: { id: { in: ids } },
-    select: { id: true, name: true },
-  });
-  const nameById = new Map(products.map((p) => [p.id, p.name]));
-  return rows.map((r) => ({
-    productId: r.productId,
-    name: nameById.get(r.productId) || "—",
-    quantity: Number(r.quantity),
-    revenue: Number(r.revenue),
-  }));
-}
-
-export async function getTopProducts(
-  prisma: PrismaClient,
-  fromIso: string,
-  toIso: string,
-  take = 10
-) {
-  const start = dayStartMoscow(fromIso);
-  const end = dayEndMoscow(toIso);
-
-  const [byQty, byRev] = await Promise.all([
-    prisma.$queryRaw<
-      Array<{ productId: string; quantity: bigint; revenue: bigint }>
-    >(Prisma.sql`
-      SELECT oi."productId",
-        SUM(oi.quantity)::bigint AS quantity,
-        SUM(oi.quantity * oi.price)::bigint AS revenue
-      FROM "OrderItem" oi
-      INNER JOIN "Order" o ON oi."orderId" = o.id
-      WHERE o.status <> 'CANCELLED'::"OrderStatus"
-        AND o."createdAt" >= ${start}
-        AND o."createdAt" <= ${end}
-      GROUP BY oi."productId"
-      ORDER BY quantity DESC
-      LIMIT ${take}
-    `),
-    prisma.$queryRaw<
-      Array<{ productId: string; quantity: bigint; revenue: bigint }>
-    >(Prisma.sql`
-      SELECT oi."productId",
-        SUM(oi.quantity)::bigint AS quantity,
-        SUM(oi.quantity * oi.price)::bigint AS revenue
-      FROM "OrderItem" oi
-      INNER JOIN "Order" o ON oi."orderId" = o.id
-      WHERE o.status <> 'CANCELLED'::"OrderStatus"
-        AND o."createdAt" >= ${start}
-        AND o."createdAt" <= ${end}
-      GROUP BY oi."productId"
-      ORDER BY revenue DESC
-      LIMIT ${take}
-    `),
-  ]);
-
-  const [topByQty, topByRevenue] = await Promise.all([
-    attachProductNames(prisma, byQty),
-    attachProductNames(prisma, byRev),
-  ]);
-
-  return { topByQty, topByRevenue };
-}
-
-/** Товары в меню без продаж в периоде (кандидаты на снятие). */
-export async function getOutsiderProducts(
-  prisma: PrismaClient,
-  fromIso: string,
-  toIso: string,
-  take = 10
-) {
-  const start = dayStartMoscow(fromIso);
-  const end = dayEndMoscow(toIso);
-
-  const sold = await prisma.$queryRaw<Array<{ productId: string }>>(
-    Prisma.sql`
-    SELECT DISTINCT oi."productId"
-    FROM "OrderItem" oi
-    INNER JOIN "Order" o ON oi."orderId" = o.id
-    WHERE o.status <> 'CANCELLED'::"OrderStatus"
-      AND o."createdAt" >= ${start}
-      AND o."createdAt" <= ${end}
-  `
-  );
-  const soldIds = sold.map((s) => s.productId);
-
-  return prisma.product.findMany({
-    where: {
-      isAvailable: true,
-      ...(soldIds.length > 0 ? { id: { notIn: soldIds } } : {}),
-    },
-    take,
-    orderBy: { name: "asc" },
-    select: { id: true, name: true },
-  });
 }
 
 export type ClientSummary = {

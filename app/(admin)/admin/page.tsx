@@ -11,10 +11,8 @@ import {
   getActiveOrders,
   getPeriodOverviewCompare,
   getClientSummary,
-  getOutsiderProducts,
   getRangeStats,
   getRevenueByDayCatalog,
-  getTopProducts,
 } from "@/lib/admin/dashboard-stats";
 import { bonusTypeLabel } from "@/lib/bonus-type-labels";
 import { DashboardRevenueChart } from "@/components/admin/dashboard/DashboardRevenueChart";
@@ -63,8 +61,6 @@ export default async function AdminDashboard({
     periodCompare,
     chartSeries,
     activeOrders,
-    tops,
-    outsiders,
     clientSum,
     recentOrders,
   ] = await Promise.all([
@@ -72,8 +68,6 @@ export default async function AdminDashboard({
     getPeriodOverviewCompare(prisma, from, to, prev.from, prev.to),
     getRevenueByDayCatalog(prisma),
     getActiveOrders(prisma, 18),
-    getTopProducts(prisma, from, to, 10),
-    getOutsiderProducts(prisma, from, to, 8),
     getClientSummary(prisma),
     prisma.order.findMany({
       orderBy: { createdAt: "desc" },
@@ -81,9 +75,6 @@ export default async function AdminDashboard({
       include: { user: true },
     }),
   ]);
-
-  const maxQty = Math.max(1, ...tops.topByQty.map((r) => r.quantity));
-  const maxRev = Math.max(1, ...tops.topByRevenue.map((r) => r.revenue));
 
   const statusColors: Record<string, string> = {
     PENDING: "bg-amber-500",
@@ -303,84 +294,7 @@ export default async function AdminDashboard({
         </div>
       </div>
 
-      {/* Блок 4 — топы */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        <div className="rounded-xl border border-border bg-surface-1 p-4 shadow-sm lg:p-5">
-          <h2 className="font-display text-lg font-bold text-text">Топ-10 по штукам</h2>
-          <ul className="mt-3 space-y-3">
-            {tops.topByQty.map((r, i) => (
-              <li key={r.productId} className="flex items-center gap-3">
-                <span className="w-5 text-center text-xs font-bold text-text-2">{i + 1}</span>
-                <div className="min-w-0 flex-1">
-                  <div className="flex justify-between gap-2 text-sm">
-                    <span className="truncate font-medium">{r.name}</span>
-                    <span className="shrink-0 tabular-nums text-text-2">{r.quantity} шт.</span>
-                  </div>
-                  <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-surface-2">
-                    <div
-                      className="h-full rounded-full bg-brand/80"
-                      style={{ width: `${(r.quantity / maxQty) * 100}%` }}
-                    />
-                  </div>
-                  <p className="mt-0.5 text-right text-xs tabular-nums text-text-2">
-                    {formatPrice(r.revenue)}
-                  </p>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </div>
-        <div className="rounded-xl border border-border bg-surface-1 p-4 shadow-sm lg:p-5">
-          <h2 className="font-display text-lg font-bold text-text">Топ-10 по выручке</h2>
-          <ul className="mt-3 space-y-3">
-            {tops.topByRevenue.map((r, i) => (
-              <li key={r.productId} className="flex items-center gap-3">
-                <span className="w-5 text-center text-xs font-bold text-text-2">{i + 1}</span>
-                <div className="min-w-0 flex-1">
-                  <div className="flex justify-between gap-2 text-sm">
-                    <span className="truncate font-medium">{r.name}</span>
-                    <span className="shrink-0 font-semibold tabular-nums">
-                      {formatPrice(r.revenue)}
-                    </span>
-                  </div>
-                  <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-surface-2">
-                    <div
-                      className="h-full rounded-full bg-accent/90"
-                      style={{ width: `${(r.revenue / maxRev) * 100}%` }}
-                    />
-                  </div>
-                  <p className="mt-0.5 text-right text-xs text-text-2">{r.quantity} шт.</p>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
-
-      <div className="rounded-xl border border-border bg-surface-1 p-4 shadow-sm lg:p-5">
-        <h2 className="font-display text-lg font-bold text-text">
-          Не продавались в период (витрина)
-        </h2>
-        <p className="mt-1 text-xs text-text-2">
-          Активные в каталоге, без строк в неотменённых заказах за выбранные даты.
-        </p>
-        <ul className="mt-3 flex flex-wrap gap-2">
-          {outsiders.length === 0 ? (
-            <li className="text-sm text-text-2">Все позиции имели продажи или список пуст</li>
-          ) : (
-            outsiders.map((p) => (
-              <li
-                key={p.id}
-                className="rounded-full border border-border bg-surface-2 px-3 py-1 text-xs"
-              >
-                {p.name}
-              </li>
-            ))
-          )}
-        </ul>
-      </div>
-
-      {/* Блок 5–6 клиенты + бонусы */}
+      {/* Блок 4–5 клиенты + бонусы */}
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="rounded-xl border border-border bg-surface-1 p-4 shadow-sm lg:p-5">
           <h2 className="font-display text-lg font-bold text-text">Клиенты</h2>
