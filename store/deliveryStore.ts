@@ -1,12 +1,19 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
+import type { GeoCoordinates } from "@/lib/yandex/suggest-types";
+
+/** [longitude, latitude] — для Яндекс.Доставки */
+export type DeliveryCoordinates = GeoCoordinates;
+
 interface DeliveryState {
   type: "DELIVERY" | "PICKUP";
   address: string;
   city: string;
   street: string;
   house: string;
+  /** [lon, lat] после выбора подсказки */
+  coordinates: DeliveryCoordinates | null;
   privateHouse: boolean;
   entrance: string;
   doorCode: string;
@@ -17,6 +24,7 @@ interface DeliveryState {
   setAddress: (address: string) => void;
   setCity: (city: string) => void;
   setStreet: (street: string) => void;
+  setCoordinates: (coordinates: DeliveryCoordinates | null) => void;
   setHouse: (house: string) => void;
   setPrivateHouse: (value: boolean) => void;
   setEntrance: (entrance: string) => void;
@@ -60,6 +68,7 @@ export const useDeliveryStore = create<DeliveryState>()(
       city: "",
       street: "",
       house: "",
+      coordinates: null,
       privateHouse: false,
       entrance: "",
       doorCode: "",
@@ -78,6 +87,7 @@ export const useDeliveryStore = create<DeliveryState>()(
           street,
           address: formatDeliveryAddress({ ...state, street }),
         })),
+      setCoordinates: (coordinates) => set({ coordinates }),
       setHouse: (house) =>
         set((state) => ({
           house,

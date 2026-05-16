@@ -55,7 +55,8 @@ export default function CheckoutPage() {
   const router = useRouter();
   const { items, getTotal, clearCart, bonusToUse, setBonusToUse } =
     useCartStore();
-  const { type, address: deliveryAddress } = useDeliveryStore();
+  const { type, address: deliveryAddress, coordinates: deliveryCoordinates } =
+    useDeliveryStore();
   const { user, setUser } = useAuthStore();
   const [submitting, setSubmitting] = useState(false);
 
@@ -117,6 +118,7 @@ export default function CheckoutPage() {
           })),
           deliveryType: type,
           address: deliveryAddress || undefined,
+          coordinates: deliveryCoordinates ?? undefined,
           guestName: data.name,
           guestPhone: data.phone,
           comment: comment || undefined,

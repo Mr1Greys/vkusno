@@ -4,6 +4,8 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Truck, Store, MapPin, Pencil, Trash2 } from "lucide-react";
 import { useDeliveryStore, formatDeliveryAddress } from "@/store/deliveryStore";
+import { StreetAddressSuggest } from "@/components/shop/StreetAddressSuggest";
+import { MOSCOW_DEFAULT_CITY } from "@/lib/yandex/moscow";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -41,10 +43,12 @@ export function DeliveryToggle({ embedded = false }: DeliveryToggleProps) {
     floor,
     apartment,
     addressComment,
+    coordinates,
     setAddress,
     setCity,
     setStreet,
     setHouse,
+    setCoordinates,
     setPrivateHouse,
     setEntrance,
     setDoorCode,
@@ -65,6 +69,7 @@ export function DeliveryToggle({ embedded = false }: DeliveryToggleProps) {
     setFloor("");
     setApartment("");
     setAddressComment("");
+    setCoordinates(null);
     setAddress("");
   };
 
@@ -144,7 +149,9 @@ export function DeliveryToggle({ embedded = false }: DeliveryToggleProps) {
             onOpenChange={(open) => {
               setDialogOpen(open);
               if (open) {
-                setAddressDialogIsNew(!useDeliveryStore.getState().address?.trim());
+                const s = useDeliveryStore.getState();
+                setAddressDialogIsNew(!s.address?.trim());
+                if (!s.city?.trim()) setCity(MOSCOW_DEFAULT_CITY);
               }
             }}
           >
@@ -250,26 +257,25 @@ export function DeliveryToggle({ embedded = false }: DeliveryToggleProps) {
                     <Input
                       id="city"
                       value={city}
-                      onChange={(e) => setCity(e.target.value)}
+                      onChange={(e) => {
+                        setCity(e.target.value);
+                        setCoordinates(null);
+                      }}
                       className="h-11 rounded-xl border-border/80 bg-white"
                       placeholder="Например, Москва"
                       autoComplete="address-level2"
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="street" className="text-text">
-                      Улица
-                    </Label>
-                    <Input
-                      id="street"
-                      value={street}
-                      onChange={(e) => setStreet(e.target.value)}
-                      className="h-11 rounded-xl border-border/80 bg-white"
-                      placeholder="Улица и проспект"
-                      autoComplete="street-address"
-                    />
-                  </div>
+                  <StreetAddressSuggest
+                    city={city}
+                    street={street}
+                    onStreetChange={setStreet}
+                    onCityChange={setCity}
+                    onHouseChange={setHouse}
+                    onCoordinatesChange={setCoordinates}
+                    hasCoordinates={coordinates !== null}
+                  />
 
                   <div className="space-y-2">
                     <Label htmlFor="house" className="text-text">
@@ -278,7 +284,10 @@ export function DeliveryToggle({ embedded = false }: DeliveryToggleProps) {
                     <Input
                       id="house"
                       value={house}
-                      onChange={(e) => setHouse(e.target.value)}
+                      onChange={(e) => {
+                        setHouse(e.target.value);
+                        setCoordinates(null);
+                      }}
                       className="h-11 rounded-xl border-border/80 bg-white"
                       placeholder="Номер дома"
                     />
